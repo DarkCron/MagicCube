@@ -12,7 +12,7 @@ public class CubeControl : MonoBehaviour
     // Start is called before the first frame update
     void Start()
     {
-        manager = new MagicCubeManager(tileRef,3, new Vector3(0,2,0));
+        manager = new MagicCubeManager(tileRef, 3, new Vector3(0, 2, 0));
     }
 
     // Update is called once per frame
@@ -27,6 +27,8 @@ public class CubeControl : MonoBehaviour
         {
             keyDown = false;
         }
+
+        manager.Update();
 
         if (keyDown)
         {
@@ -48,10 +50,6 @@ public class MagicCubeManager
 
     private CubeCollectionHelper collectionHelper;
 
-    private MagicCubeRow[] cubeRows;
-    private MagicCubeColumnX[] cubeColumns_X;
-    private MagicCubeColumnZ[] cubeColumns_Z;
-
     private GameObject ownHolder;
 
     private BoxCollider colliderPosX;
@@ -61,10 +59,17 @@ public class MagicCubeManager
     private BoxCollider colliderPosZ;
     private BoxCollider colliderNegZ;
 
+    private List<CubeAction> actionList;
+
     public MagicCubeManager(GameObject cubeTileRef, int n, Vector3 pivot)
     {
         ownHolder = new GameObject("Magic Cube");
         ownHolder.transform.position = Vector3.zero;
+        ownHolder.layer = 10;
+        MagicCubeBehaviour behaviour = ownHolder.AddComponent<MagicCubeBehaviour>();
+        behaviour.Init(this);
+
+        actionList = new List<CubeAction>();
 
         this.cubeTileRef = cubeTileRef;
         magicCubeSize = n;
@@ -73,17 +78,22 @@ public class MagicCubeManager
 
         collectionHelper = new CubeCollectionHelper(0);
         GenerateCubeTiles();
-
-        cubeRows = new MagicCubeRow[magicCubeSize];
-        cubeColumns_X = new MagicCubeColumnX[magicCubeSize];
-        cubeColumns_Z = new MagicCubeColumnZ[magicCubeSize];
-
-        GenerateCubeTileCollections();
     }
 
-    private void GenerateCubeTileCollections()
+    public void StartActionRemoveTile(List<GameObject> tiles)
     {
-        collectionHelper.generateData(this);
+        foreach (var tile in tiles)
+        {
+            collectionHelper.RemoveCubeTile(tile);
+        }
+    }
+
+    public void EndActionReinsertTile(List<GameObject> tiles)
+    {
+        foreach (var tile in tiles)
+        {
+            collectionHelper.ProcessCubeTile(tile);
+        }
     }
 
     struct CubeCollectionHelper
@@ -99,6 +109,13 @@ public class MagicCubeManager
             data_Z = new SameCoordinateHelperZ(0);
         }
 
+        public void ProcessCubeTile(GameObject tile)
+        {
+            data_X.ProcessCubeTile(tile, tile.transform.position);
+            data_Y.ProcessCubeTile(tile, tile.transform.position);
+            data_Z.ProcessCubeTile(tile, tile.transform.position);
+        }
+
         public void ProcessCubeTile(GameObject tile, Vector3 position)
         {
             data_X.ProcessCubeTile(tile, position);
@@ -106,13 +123,11 @@ public class MagicCubeManager
             data_Z.ProcessCubeTile(tile, position);
         }
 
-        public void generateData(MagicCubeManager manager)
+        public void RemoveCubeTile(GameObject tile)
         {
-            List<MagicCubeRow> rows = new List<MagicCubeRow>();
-            foreach (var entry in data_Y.GetData())
-            {
-                rows.Add(new MagicCubeRow(manager,entry.Value));
-            }
+            data_X.RemoveCubeTile(tile);
+            data_Y.RemoveCubeTile(tile);
+            data_Z.RemoveCubeTile(tile);
         }
 
         public void Report()
@@ -124,26 +139,26 @@ public class MagicCubeManager
 
         struct SameCoordinateHelperX
         {
-            Dictionary<float,List<GameObject>> data;
+            Dictionary<int, List<GameObject>> data;
 
             public SameCoordinateHelperX(int mock)
             {
-                data = new Dictionary<float, List<GameObject>>();
+                data = new Dictionary<int, List<GameObject>>();
             }
 
             public void ProcessCubeTile(GameObject tile, Vector3 position)
             {
-                if (data.ContainsKey(position.x))
+                if (data.ContainsKey(Mathf.RoundToInt(position.x)))
                 {
-                    data[position.x].Add(tile);
+                    data[Mathf.RoundToInt(position.x)].Add(tile);
                 }
                 else
                 {
-                    data.Add(position.x, new List<GameObject> { tile });
+                    data.Add(Mathf.RoundToInt(position.x), new List<GameObject> { tile });
                 }
             }
 
-            public Dictionary<float, List<GameObject>> GetData()
+            public Dictionary<int, List<GameObject>> GetData()
             {
                 return data;
             }
@@ -158,29 +173,34 @@ public class MagicCubeManager
                 }
                 Debug.Log("***************");
             }
+
+            internal void RemoveCubeTile(GameObject tile)
+            {
+                data[Mathf.RoundToInt(tile.transform.position.x)].Remove(tile);
+            }
         }
         struct SameCoordinateHelperY
         {
-            Dictionary<float, List<GameObject>> data;
+            Dictionary<int, List<GameObject>> data;
 
             public SameCoordinateHelperY(int mock)
             {
-                data = new Dictionary<float, List<GameObject>>();
+                data = new Dictionary<int, List<GameObject>>();
             }
 
             public void ProcessCubeTile(GameObject tile, Vector3 position)
             {
-                if (data.ContainsKey(position.y))
+                if (data.ContainsKey(Mathf.RoundToInt(position.y)))
                 {
-                    data[position.y].Add(tile);
+                    data[Mathf.RoundToInt(position.y)].Add(tile);
                 }
                 else
                 {
-                    data.Add(position.y, new List<GameObject> { tile });
+                    data.Add(Mathf.RoundToInt(position.y), new List<GameObject> { tile });
                 }
             }
 
-            public Dictionary<float, List<GameObject>> GetData()
+            public Dictionary<int, List<GameObject>> GetData()
             {
                 return data;
             }
@@ -195,29 +215,34 @@ public class MagicCubeManager
                 }
                 Debug.Log("***************");
             }
+
+            internal void RemoveCubeTile(GameObject tile)
+            {
+                data[Mathf.RoundToInt(tile.transform.position.y)].Remove(tile);
+            }
         }
         struct SameCoordinateHelperZ
         {
-            Dictionary<float, List<GameObject>> data;
+            Dictionary<int, List<GameObject>> data;
 
             public SameCoordinateHelperZ(int mock)
             {
-                data = new Dictionary<float, List<GameObject>>();
+                data = new Dictionary<int, List<GameObject>>();
             }
 
             public void ProcessCubeTile(GameObject tile, Vector3 position)
             {
-                if (data.ContainsKey(position.z))
+                if (data.ContainsKey(Mathf.RoundToInt(position.z)))
                 {
-                    data[position.z].Add(tile);
+                    data[Mathf.RoundToInt(position.z)].Add(tile);
                 }
                 else
                 {
-                    data.Add(position.z, new List<GameObject> { tile });
+                    data.Add(Mathf.RoundToInt(position.z), new List<GameObject> { tile });
                 }
             }
 
-            public Dictionary<float, List<GameObject>> GetData()
+            public Dictionary<int, List<GameObject>> GetData()
             {
                 return data;
             }
@@ -232,13 +257,78 @@ public class MagicCubeManager
                 }
                 Debug.Log("***************");
             }
+
+            internal void RemoveCubeTile(GameObject tile)
+            {
+                data[Mathf.RoundToInt(tile.transform.position.z)].Remove(tile);
+            }
+        }
+
+        /// <summary>
+        /// Get all gameobjects from a ceretain row slice. Deep copy.
+        /// </summary>
+        /// <param name="index">indexing works from 0 - n-1, 0 being the lowest slice, n-1 the highest</param>
+        /// <returns></returns>
+        public List<GameObject> GetRowTiles(int index)
+        {
+            int count = 0;
+            foreach (var slice in data_Y.GetData())
+            {
+                if (count == index)
+                {
+                    return new List<GameObject>(slice.Value);
+                }
+                count++;
+            }
+
+            throw new UnityException();
+        }
+
+        /// <summary>
+        /// Get all gameobjects from a certain column slice. Deep copy.
+        /// </summary>
+        /// <param name="index">indexing works from 0 - n-1, 0 being the lowest slice, n-1 the highest</param>
+        /// <returns></returns>
+        public List<GameObject> GetColumnXTiles(int index)
+        {
+            int count = 0;
+            foreach (var slice in data_X.GetData())
+            {
+                if (count == index)
+                {
+                    return new List<GameObject>(slice.Value);
+                }
+                count++;
+            }
+
+            throw new UnityException();
+        }
+
+        /// <summary>
+        /// Get all gameobjects from a certain column slice. Deep copy.
+        /// </summary>
+        /// <param name="index">indexing works from 0 - n-1, 0 being the lowest slice, n-1 the highest</param>
+        /// <returns></returns>
+        public List<GameObject> GetColumnZTiles(int index)
+        {
+            int count = 0;
+            foreach (var slice in data_Z.GetData())
+            {
+                if (count == index)
+                {
+                    return new List<GameObject>(slice.Value);
+                }
+                count++;
+            }
+
+            throw new UnityException();
         }
     }
 
     private void GenerateCubeTiles()
     {
         Vector3 size = cubeTileRef.GetComponent<MeshFilter>().sharedMesh.bounds.size;
-        mainPivot = size * cubeTileRef.transform.localScale.z * (magicCubeSize-1) / 2;
+        mainPivot = size * cubeTileRef.transform.localScale.z * (magicCubeSize - 1) / 2;
         ownHolder.transform.position = mainPivot;
 
         for (int i = 0; i < magicCubeSize; i++)
@@ -247,7 +337,7 @@ public class MagicCubeManager
             {
                 for (int k = 0; k < magicCubeSize; k++)
                 {
-                    var temp = GameObject.Instantiate(cubeTileRef, 
+                    var temp = GameObject.Instantiate(cubeTileRef,
                           cubeTileRef.transform.up * k * size.y * cubeTileRef.transform.localScale.y
                         + cubeTileRef.transform.forward * j * size.z * cubeTileRef.transform.localScale.z
                         + cubeTileRef.transform.right * i * size.x * cubeTileRef.transform.localScale.x
@@ -259,7 +349,7 @@ public class MagicCubeManager
         }
         //collectionHelper.Report();
         BoxCollider colliderPosZ = ownHolder.AddComponent<BoxCollider>();
-        colliderPosZ.center = new Vector3(0,0,(size * cubeTileRef.transform.localScale.z * (magicCubeSize) / 2).z);
+        colliderPosZ.center = new Vector3(0, 0, (size * cubeTileRef.transform.localScale.z * (magicCubeSize) / 2).z);
         colliderPosZ.size = size * cubeTileRef.transform.localScale.z * magicCubeSize;
         colliderPosZ.size = new Vector3(colliderPosZ.size.x, colliderPosZ.size.y, 0.1f);
 
@@ -274,7 +364,7 @@ public class MagicCubeManager
         colliderPosX.size = new Vector3(0.1f, colliderPosX.size.y, colliderPosX.size.z);
 
         BoxCollider colliderNegX = ownHolder.AddComponent<BoxCollider>();
-        colliderNegX.center = new Vector3( -(size * cubeTileRef.transform.localScale.x * (magicCubeSize) / 2).x, 0, 0);
+        colliderNegX.center = new Vector3(-(size * cubeTileRef.transform.localScale.x * (magicCubeSize) / 2).x, 0, 0);
         colliderNegX.size = size * cubeTileRef.transform.localScale.x * magicCubeSize;
         colliderNegX.size = new Vector3(0.1f, colliderNegX.size.y, colliderNegX.size.z);
 
@@ -307,82 +397,422 @@ public class MagicCubeManager
     {
         return magicCubeSize;
     }
+
+    private CubeAction testAction;
+    public void Update()
+    {
+        if (testAction != null)
+        {
+            if (!testAction.IsActionDone()) {
+                testAction.Update();
+            }
+            else
+            {
+                testAction = null;
+                //testAction.GetUndoAction().StartAction();
+                //if (!testAction.GetUndoAction().IsActionDone())
+                //{
+                //    testAction.GetUndoAction().Update();
+                //}
+            }
+        }
+
+        if (Input.GetKeyDown(KeyCode.R))
+        {
+            if (actionList.Count != 0)
+            {
+                Debug.Log("Trying Replay");
+                CubeAction lastAction = actionList[actionList.Count-1];
+                actionList.Remove(lastAction);
+                lastAction.GetUndoAction().StartAction();
+                testAction = lastAction.GetUndoAction();
+            }
+        }
+
+        if (Input.GetMouseButtonDown(0))
+        {
+
+
+            if (testAction != null)
+            {
+
+            }
+            else
+            {
+                RaycastHit hit;
+                Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
+                int layerMask = 1 << 10;
+
+                if (Physics.Raycast(ray, out hit, Mathf.Infinity, layerMask))
+                {
+                    //Debug.Log(hit.collider);
+                    if (hit.collider.Equals(colliderPosY))
+                    {
+                        var collection = collectionHelper.GetRowTiles(2);
+                        testAction = new ActionRotateZXClockWise(ownHolder, this, collection, true);
+                        actionList.Add(testAction);
+                    }
+                    else if (hit.collider.Equals(colliderNegX))
+                    {
+                        var collection = collectionHelper.GetColumnXTiles(0);
+                        testAction = new ActionRotateZYClockWise(ownHolder, this, collection, true);
+                        actionList.Add(testAction);
+                    }
+                    else if (hit.collider.Equals(colliderNegZ))
+                    {
+                        var collection = collectionHelper.GetColumnZTiles(0);
+                        testAction = new ActionRotateYXClockWise(ownHolder, this, collection, true);
+                        actionList.Add(testAction);
+                    }
+                    else if (hit.collider.Equals(colliderPosX))
+                    {
+                        var collection = collectionHelper.GetColumnXTiles(2);
+                        testAction = new ActionRotateZYClockWise(ownHolder, this, collection, true);
+                        actionList.Add(testAction);
+                    }
+                }
+            }
+
+            RaycastHit hit2;
+            Ray ray2 = Camera.main.ScreenPointToRay(Input.mousePosition);
+            int layerMask2 = LayerMask.GetMask("CubeTileLayer");
+
+            if (Physics.Raycast(ray2, out hit2,Mathf.Infinity, layerMask2))
+            {
+                //Debug.Log(hit2.transform.name);
+                //Debug.Log(LayerMask.GetMask("CubeTileLayer") + "    " + LayerMask.GetMask("MainGameLayer"));
+                //hit2.transform.gameObject.SetActive(false);
+            }
+        }
+    }
 }
 
-/// <summary>
-/// Helper data management class for the magic cube.
-/// We will manage the magic nxnxn cube in "rows" and "columns"
-///  - a "ROW" contains (in Unity) all cubeTiles on the same ZX plane (Y constant).
-///  - a "COLUMN_X" contains (in Unity) all cubeTile on the same ZY plane (X constant)
-///  - a "COLUMN_Z" contains (in Unity) all cubeTile on the same YX plane (Z constant)
-/// </summary>
-public abstract class MagicCubeCollection
+public abstract class CubeAction
 {
-    //Contains references to the maintained cubes by this data structure
-    private GameObject[] managedCubes;
+    protected bool bStartAction = false;
+    protected bool bActionIsDone = false;
+    protected List<GameObject> cubeTileList;
 
-    //A weighted center based on all managed cubes, to make the rotation possible.
-    private Vector3 pivot;
+    protected float timeToCompleteAction = 1.0f;
+    protected float timePassed = 0.0f;
 
-    private MagicCubeManager manager;
+    protected float undoModifier = 3.0f;
 
-    public MagicCubeCollection(MagicCubeManager manager, List<GameObject> items)
+    protected CubeAction undoAction;
+
+    protected GameObject magicCube;
+    protected MagicCubeManager manager;
+
+    public CubeAction(GameObject magicCube, MagicCubeManager manager, List<GameObject> cubeTileList, bool bStartImmediately = false)
     {
+        this.cubeTileList = cubeTileList;
+        this.bStartAction = bStartImmediately;
+        this.magicCube = magicCube;
         this.manager = manager;
-        managedCubes = items.ToArray();
-        if (managedCubes.Length != manager.GetMagicCubeSize() * manager.GetMagicCubeSize())
+
+        if (!bStartImmediately)
         {
-            throw new UnityException();
+            timeToCompleteAction /= undoModifier;
         }
         else
         {
-            Debug.Log("NICE!");
+            StartAction();
         }
-       // managedCubes = new GameObject[manager.GetMagicCubeSize() * manager.GetMagicCubeSize()];
     }
 
-    public void AddCubeTile(GameObject gameObject)
+    public void CompleteAction()
     {
-        for (int i = 0; i < managedCubes.Length; i++)
+        bActionIsDone = true;
+        manager.EndActionReinsertTile(cubeTileList);
+
+    }
+
+    public bool IsActionDone()
+    {
+        return bActionIsDone;
+    }
+
+    public CubeAction GetUndoAction()
+    {
+        return undoAction;
+    }
+
+    public void StartAction()
+    {
+        bStartAction = true;
+
+        manager.StartActionRemoveTile(cubeTileList);
+    }
+
+    public abstract void Update();
+}
+
+public class ActionRotateZXClockWise : CubeAction
+{
+    public ActionRotateZXClockWise(GameObject magicCube, MagicCubeManager manager, List<GameObject> cubeTileList, bool bStartImmediately = false) : base(magicCube, manager, cubeTileList, bStartImmediately)
+    {
+        if (bStartImmediately)
         {
-            if (managedCubes[i] == null)
+            undoAction = new ActionRotateZXCounterClockWise(magicCube, manager, cubeTileList, false);
+        }
+    }
+
+    public override void Update()
+    {
+        if (bStartAction && !bActionIsDone)
+        {
+            timePassed += Time.deltaTime;
+
+            if (timePassed < timeToCompleteAction)
             {
-                managedCubes[i] = gameObject;
-                break;
+                for (int i = 0; i < cubeTileList.Count; i++)
+                {
+                    cubeTileList[i].transform.RotateAround(
+                    new Vector3(magicCube.transform.position.x, cubeTileList[i].transform.position.y, magicCube.transform.position.z),
+                    new Vector3(0, magicCube.transform.position.y, 0),
+                                90 * Time.deltaTime / timeToCompleteAction);
+                }
+            }
+            else
+            {
+                for (int i = 0; i < cubeTileList.Count; i++)
+                {
+                    cubeTileList[i].transform.RotateAround(
+                    new Vector3(magicCube.transform.position.x, cubeTileList[i].transform.position.y, magicCube.transform.position.z),
+                    new Vector3(0, magicCube.transform.position.y, 0),
+                                90 * (timeToCompleteAction - (timePassed - Time.deltaTime)) / timeToCompleteAction);
+                }
+            }
+
+            if (timePassed >= timeToCompleteAction)
+            {
+                CompleteAction();
             }
         }
     }
+}
 
-    public void ReplaceCubeTile(GameObject other, GameObject fromThisCollection)
+public class ActionRotateZXCounterClockWise : CubeAction
+{
+    public ActionRotateZXCounterClockWise(GameObject magicCube, MagicCubeManager manager, List<GameObject> cubeTileList, bool bStartImmediately = false) : base(magicCube, manager, cubeTileList, bStartImmediately)
     {
-        for (int i = 0; i < managedCubes.Length; i++)
+        if (bStartImmediately)
         {
-            if (managedCubes[i] == fromThisCollection)
+            undoAction = new ActionRotateZXClockWise(magicCube,manager, cubeTileList, false);
+        }
+    }
+
+    public override void Update()
+    {
+        if (bStartAction && !bActionIsDone)
+        {
+            timePassed += Time.deltaTime;
+
+            if (timePassed < timeToCompleteAction)
             {
-                managedCubes[i] = other;
-                break;
+                for (int i = 0; i < cubeTileList.Count; i++)
+                {
+                    cubeTileList[i].transform.RotateAround(
+                    new Vector3(magicCube.transform.position.x, cubeTileList[i].transform.position.y, magicCube.transform.position.z),
+                    new Vector3(0, magicCube.transform.position.y, 0),
+                                -90 * Time.deltaTime / timeToCompleteAction);
+                }
+            }
+            else
+            {
+                for (int i = 0; i < cubeTileList.Count; i++)
+                {
+                    cubeTileList[i].transform.RotateAround(
+                    new Vector3(magicCube.transform.position.x, cubeTileList[i].transform.position.y, magicCube.transform.position.z),
+                    new Vector3(0, magicCube.transform.position.y, 0),
+                                -90 * (timeToCompleteAction - (timePassed - Time.deltaTime)) / timeToCompleteAction);
+                }
+            }
+
+            if (timePassed >= timeToCompleteAction)
+            {
+                CompleteAction();
             }
         }
     }
 }
 
-public class MagicCubeRow : MagicCubeCollection
+public class ActionRotateZYClockWise : CubeAction
 {
-    public MagicCubeRow(MagicCubeManager manager, List<GameObject> items) : base(manager, items)
+    public ActionRotateZYClockWise(GameObject magicCube, MagicCubeManager manager, List<GameObject> cubeTileList, bool bStartImmediately = false) : base(magicCube, manager, cubeTileList, bStartImmediately)
     {
+        if (bStartImmediately)
+        {
+            undoAction = new ActionRotateZYCounterClockWise(magicCube, manager, cubeTileList, false);
+        }
+    }
+
+    public override void Update()
+    {
+        if (bStartAction && !bActionIsDone)
+        {
+            timePassed += Time.deltaTime;
+
+            if (timePassed < timeToCompleteAction)
+            {
+                for (int i = 0; i < cubeTileList.Count; i++)
+                {
+                    cubeTileList[i].transform.RotateAround(
+                            new Vector3(cubeTileList[i].transform.position.x, magicCube.transform.position.y, magicCube.transform.position.z),
+                            new Vector3(magicCube.transform.position.x, 0, 0),
+                                90 * Time.deltaTime / timeToCompleteAction);
+                }
+            }
+            else
+            {
+                for (int i = 0; i < cubeTileList.Count; i++)
+                {
+                    cubeTileList[i].transform.RotateAround(
+                            new Vector3(cubeTileList[i].transform.position.x, magicCube.transform.position.y, magicCube.transform.position.z),
+                            new Vector3(magicCube.transform.position.x, 0, 0),
+                                90 * (timeToCompleteAction - (timePassed - Time.deltaTime)) / timeToCompleteAction);
+                }
+            }
+
+            if (timePassed >= timeToCompleteAction)
+            {
+                CompleteAction();
+            }
+        }
     }
 }
 
-public class MagicCubeColumnX : MagicCubeCollection
+public class ActionRotateZYCounterClockWise : CubeAction
 {
-    public MagicCubeColumnX(MagicCubeManager manager, List<GameObject> items) : base(manager, items)
+    public ActionRotateZYCounterClockWise(GameObject magicCube, MagicCubeManager manager, List<GameObject> cubeTileList, bool bStartImmediately = false) : base(magicCube, manager, cubeTileList, bStartImmediately)
     {
+        if (bStartImmediately)
+        {
+            undoAction = new ActionRotateZYClockWise(magicCube, manager, cubeTileList, false);
+        }
+    }
+
+    public override void Update()
+    {
+        if (bStartAction && !bActionIsDone)
+        {
+            timePassed += Time.deltaTime;
+
+            if (timePassed < timeToCompleteAction)
+            {
+                for (int i = 0; i < cubeTileList.Count; i++)
+                {
+                    cubeTileList[i].transform.RotateAround(
+                            new Vector3(cubeTileList[i].transform.position.x, magicCube.transform.position.y, magicCube.transform.position.z),
+                            new Vector3(magicCube.transform.position.x, 0, 0),
+                                -90 * Time.deltaTime / timeToCompleteAction);
+                }
+            }
+            else
+            {
+                for (int i = 0; i < cubeTileList.Count; i++)
+                {
+                    cubeTileList[i].transform.RotateAround(
+                            new Vector3(cubeTileList[i].transform.position.x, magicCube.transform.position.y, magicCube.transform.position.z),
+                            new Vector3(magicCube.transform.position.x, 0, 0),
+                                -90 * (timeToCompleteAction - (timePassed - Time.deltaTime)) / timeToCompleteAction);
+                }
+            }
+
+            if (timePassed >= timeToCompleteAction)
+            {
+                CompleteAction();
+            }
+        }
     }
 }
 
-public class MagicCubeColumnZ : MagicCubeCollection
+public class ActionRotateYXClockWise : CubeAction
 {
-    public MagicCubeColumnZ(MagicCubeManager manager, List<GameObject> items) : base(manager, items)
+    public ActionRotateYXClockWise(GameObject magicCube, MagicCubeManager manager, List<GameObject> cubeTileList, bool bStartImmediately = false) : base(magicCube, manager, cubeTileList, bStartImmediately)
     {
+        if (bStartImmediately)
+        {
+            undoAction = new ActionRotateYXCounterClockWise(magicCube, manager, cubeTileList, false);
+        }
+    }
+
+    public override void Update()
+    {
+        if (bStartAction && !bActionIsDone)
+        {
+            timePassed += Time.deltaTime;
+
+            if (timePassed < timeToCompleteAction)
+            {
+                for (int i = 0; i < cubeTileList.Count; i++)
+                {
+                    cubeTileList[i].transform.RotateAround(
+                                new Vector3(magicCube.transform.position.x, magicCube.transform.position.y, cubeTileList[i].transform.position.z),
+                                new Vector3(0, 0, magicCube.transform.position.z),
+                                90 * Time.deltaTime / timeToCompleteAction);
+                }
+            }
+            else
+            {
+                for (int i = 0; i < cubeTileList.Count; i++)
+                {
+                    cubeTileList[i].transform.RotateAround(
+                                new Vector3(magicCube.transform.position.x, magicCube.transform.position.y, cubeTileList[i].transform.position.z),
+                                new Vector3(0, 0, magicCube.transform.position.z),
+                                90 * (timeToCompleteAction - (timePassed - Time.deltaTime)) / timeToCompleteAction);
+                }
+            }
+
+            if (timePassed >= timeToCompleteAction)
+            {
+                CompleteAction();
+            }
+        }
+    }
+}
+
+public class ActionRotateYXCounterClockWise : CubeAction
+{
+    public ActionRotateYXCounterClockWise(GameObject magicCube, MagicCubeManager manager, List<GameObject> cubeTileList, bool bStartImmediately = false) : base(magicCube, manager, cubeTileList, bStartImmediately)
+    {
+        if (bStartImmediately)
+        {
+            undoAction = new ActionRotateYXClockWise(magicCube, manager, cubeTileList, false);
+        }
+    }
+
+    public override void Update()
+    {
+        if (bStartAction && !bActionIsDone)
+        {
+            timePassed += Time.deltaTime;
+
+            if (timePassed < timeToCompleteAction)
+            {
+                for (int i = 0; i < cubeTileList.Count; i++)
+                {
+                    cubeTileList[i].transform.RotateAround(
+                                new Vector3(magicCube.transform.position.x, magicCube.transform.position.y, cubeTileList[i].transform.position.z),
+                                new Vector3(0, 0, magicCube.transform.position.z),
+                                -90 * Time.deltaTime / timeToCompleteAction);
+                }
+            }
+            else
+            {
+                for (int i = 0; i < cubeTileList.Count; i++)
+                {
+                    cubeTileList[i].transform.RotateAround(
+                                new Vector3(magicCube.transform.position.x, magicCube.transform.position.y, cubeTileList[i].transform.position.z),
+                                new Vector3(0, 0, magicCube.transform.position.z),
+                                -90 * (timeToCompleteAction - (timePassed - Time.deltaTime)) / timeToCompleteAction);
+                }
+            }
+
+            if (timePassed >= timeToCompleteAction)
+            {
+                CompleteAction();
+            }
+        }
     }
 }
