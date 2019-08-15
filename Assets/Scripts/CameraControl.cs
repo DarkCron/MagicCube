@@ -56,7 +56,7 @@ public class CameraControl : MonoBehaviour
             {
                 distanceMoved = -easeInDistance;
             }
-            Debug.Log(distanceMoved);
+            //Debug.Log(distanceMoved);
             
             currentMousePos = Input.mousePosition;
 
@@ -122,7 +122,6 @@ public class CameraControl : MonoBehaviour
                 // scroll down
                 ZoomOut();
             }
-            Debug.Log(currentZoom);
         }
     }
 

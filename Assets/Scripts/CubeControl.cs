@@ -41,7 +41,7 @@ public class CubeControl : MonoBehaviour
 
     private void OnMouseDrag()
     {
-        
+
     }
 }
 
@@ -66,7 +66,7 @@ public class MagicCubeManager
 
     private List<CubeAction> actionList;
 
-    public enum MagicCubeSide{ PosX, NegX, PosY, NegY, PosZ, NegZ, None}
+    public enum MagicCubeSide { PosX, NegX, PosY, NegY, PosZ, NegZ, None }
 
     public MagicCubeManager(GameObject cubeTileRef, int n, Vector3 pivot)
     {
@@ -85,7 +85,7 @@ public class MagicCubeManager
 
         collectionHelper = new CubeCollectionHelper(0);
         GenerateCubeTiles();
-        Camera.main.transform.position = new Vector3(mainPivot.x,mainPivot.y,Camera.main.GetComponent<CameraControl>().GetCurrentZoom());
+        Camera.main.transform.position = new Vector3(mainPivot.x, mainPivot.y, Camera.main.GetComponent<CameraControl>().GetCurrentZoom());
         Camera.main.transform.rotation = new Quaternion();
     }
 
@@ -395,13 +395,16 @@ public class MagicCubeManager
             {
                 for (int k = 0; k < magicCubeSize; k++)
                 {
-                    var temp = GameObject.Instantiate(cubeTileRef,
-                          cubeTileRef.transform.up * k * size.y * cubeTileRef.transform.localScale.y
-                        + cubeTileRef.transform.forward * j * size.z * cubeTileRef.transform.localScale.z
-                        + cubeTileRef.transform.right * i * size.x * cubeTileRef.transform.localScale.x
-                        , cubeTileRef.transform.rotation);
-                    collectionHelper.ProcessCubeTile(temp, temp.transform.position);
-                    temp.transform.SetParent(ownHolder.transform);
+                    if (k == 0 || j == 0 || i == 0 || k == magicCubeSize - 1 || j == magicCubeSize - 1 || i == magicCubeSize - 1)
+                    {
+                        var temp = GameObject.Instantiate(cubeTileRef,
+                              cubeTileRef.transform.up * k * size.y * cubeTileRef.transform.localScale.y
+                            + cubeTileRef.transform.forward * j * size.z * cubeTileRef.transform.localScale.z
+                            + cubeTileRef.transform.right * i * size.x * cubeTileRef.transform.localScale.x
+                            , cubeTileRef.transform.rotation);
+                        collectionHelper.ProcessCubeTile(temp, temp.transform.position);
+                        temp.transform.SetParent(ownHolder.transform);
+                    }
                 }
             }
         }
@@ -461,7 +464,8 @@ public class MagicCubeManager
     {
         if (testAction != null)
         {
-            if (!testAction.IsActionDone()) {
+            if (!testAction.IsActionDone())
+            {
                 testAction.Update();
             }
             else
@@ -475,12 +479,13 @@ public class MagicCubeManager
             }
         }
 
-        if (Input.GetKeyDown(KeyCode.R))
+        if (Input.GetKeyDown(KeyCode.R) && testAction == null)
         {
+            //Debug.Log(actionList.Count);
             if (actionList.Count != 0)
             {
-                Debug.Log("Trying Replay");
-                CubeAction lastAction = actionList[actionList.Count-1];
+                //Debug.Log("Trying Replay");
+                CubeAction lastAction = actionList[actionList.Count - 1];
                 actionList.Remove(lastAction);
                 lastAction.GetUndoAction().StartAction();
                 testAction = lastAction.GetUndoAction();
@@ -574,11 +579,9 @@ public class MagicCubeManager
                         testAction = new ActionRotateYXCounterClockWise(ownHolder, this, new List<GameObject>(collectionHelper.GetColumnZTiles(cubeTile)), true);
                         break;
                     case MagicCubeBehaviour.SwipeDragDirection.LEFT:
-                        Debug.Log("LEFT");
                         testAction = new ActionRotateZXClockWise(ownHolder, this, new List<GameObject>(collectionHelper.GetRowTiles(cubeTile)), true);
                         break;
                     case MagicCubeBehaviour.SwipeDragDirection.RIGHT:
-                        Debug.Log("RIGHT");
                         testAction = new ActionRotateZXCounterClockWise(ownHolder, this, new List<GameObject>(collectionHelper.GetRowTiles(cubeTile)), true);
                         break;
                     default:
@@ -595,11 +598,9 @@ public class MagicCubeManager
                         testAction = new ActionRotateYXCounterClockWise(ownHolder, this, new List<GameObject>(collectionHelper.GetColumnZTiles(cubeTile)), true);
                         break;
                     case MagicCubeBehaviour.SwipeDragDirection.LEFT:
-                        Debug.Log("LEFT");
                         testAction = new ActionRotateZXClockWise(ownHolder, this, new List<GameObject>(collectionHelper.GetRowTiles(cubeTile)), true);
                         break;
                     case MagicCubeBehaviour.SwipeDragDirection.RIGHT:
-                        Debug.Log("RIGHT");
                         testAction = new ActionRotateZXCounterClockWise(ownHolder, this, new List<GameObject>(collectionHelper.GetRowTiles(cubeTile)), true);
                         break;
                     default:
@@ -616,11 +617,9 @@ public class MagicCubeManager
                         testAction = new ActionRotateYXCounterClockWise(ownHolder, this, new List<GameObject>(collectionHelper.GetColumnZTiles(cubeTile)), true);
                         break;
                     case MagicCubeBehaviour.SwipeDragDirection.LEFT:
-                        Debug.Log("LEFT");
                         testAction = new ActionRotateZYClockWise(ownHolder, this, new List<GameObject>(collectionHelper.GetColumnXTiles(cubeTile)), true);
                         break;
                     case MagicCubeBehaviour.SwipeDragDirection.RIGHT:
-                        Debug.Log("RIGHT");
                         testAction = new ActionRotateZYCounterClockWise(ownHolder, this, new List<GameObject>(collectionHelper.GetColumnXTiles(cubeTile)), true);
                         break;
                     default:
@@ -637,11 +636,9 @@ public class MagicCubeManager
                         testAction = new ActionRotateYXCounterClockWise(ownHolder, this, new List<GameObject>(collectionHelper.GetColumnZTiles(cubeTile)), true);
                         break;
                     case MagicCubeBehaviour.SwipeDragDirection.LEFT:
-                        Debug.Log("LEFT");
                         testAction = new ActionRotateZYClockWise(ownHolder, this, new List<GameObject>(collectionHelper.GetColumnXTiles(cubeTile)), true);
                         break;
                     case MagicCubeBehaviour.SwipeDragDirection.RIGHT:
-                        Debug.Log("RIGHT");
                         testAction = new ActionRotateZYCounterClockWise(ownHolder, this, new List<GameObject>(collectionHelper.GetColumnXTiles(cubeTile)), true);
                         break;
                     default:
@@ -689,6 +686,8 @@ public class MagicCubeManager
             default:
                 break;
         }
+
+        actionList.Add(testAction);
     }
 
     public bool IsPerformingAction()
@@ -708,17 +707,20 @@ public class MagicCubeManager
         if (collider == colliderPosX)
         {
             return MagicCubeSide.PosX;
-        }else if (collider == colliderNegX)
+        }
+        else if (collider == colliderNegX)
         {
             return MagicCubeSide.NegX;
-        }else if (collider == colliderPosY)
+        }
+        else if (collider == colliderPosY)
         {
             return MagicCubeSide.PosY;
         }
         else if (collider == colliderNegY)
         {
             return MagicCubeSide.NegY;
-        }else if (collider == colliderPosZ)
+        }
+        else if (collider == colliderPosZ)
         {
             return MagicCubeSide.PosZ;
         }
@@ -842,7 +844,7 @@ public class ActionRotateZXCounterClockWise : CubeAction
     {
         if (bStartImmediately)
         {
-            undoAction = new ActionRotateZXClockWise(magicCube,manager, cubeTileList, false);
+            undoAction = new ActionRotateZXClockWise(magicCube, manager, cubeTileList, false);
         }
     }
 
