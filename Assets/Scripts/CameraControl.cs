@@ -9,6 +9,11 @@ public class CameraControl : MonoBehaviour
     public float easeInDistance = 600.0f;
     private float distanceMoved = 0.0f;
 
+    public float minZoom = -4.0f;
+    public float maxZoom = -13.0f;
+    public float zoomSpeed = 20.0f;
+    private float currentZoom = -5.0f;
+
     public float cameraSpeed = 90.0f;
 
     private GameObject rotationTarget;
@@ -92,32 +97,6 @@ public class CameraControl : MonoBehaviour
                 {
                     transform.RotateAround(rotationTarget.transform.position, transform.right, Time.deltaTime * actualCameraMoveSpeed);
                 }
-                //if (Math.Abs(difference.x) > Math.Abs(difference.y))
-                //{
-                //    if (difference.x > 0)
-                //    {
-                //        transform.RotateAround(rotationTarget.transform.position, transform.right, Time.deltaTime * actualCameraMoveSpeed);
-                //        //transform.RotateAround(rotationTarget.transform.position, rotationTarget.transform.right, Time.deltaTime * actualCameraMoveSpeed);
-                //    }
-                //    else
-                //    {
-                //        transform.RotateAround(rotationTarget.transform.position, -transform.right, Time.deltaTime * actualCameraMoveSpeed);
-                //        //transform.RotateAround(rotationTarget.transform.position, -rotationTarget.transform.right, Time.deltaTime * actualCameraMoveSpeed);
-                //    }
-                //}
-                //else if (enableYRot)
-                //{
-                //    if (difference.y > 0)
-                //    {
-                //        transform.RotateAround(rotationTarget.transform.position, transform.up, Time.deltaTime * actualCameraMoveSpeed);
-                //        //transform.RotateAround(rotationTarget.transform.position, rotationTarget.transform.up, Time.deltaTime * actualCameraMoveSpeed);
-                //    }
-                //    else
-                //    {
-                //        transform.RotateAround(rotationTarget.transform.position, -transform.up, Time.deltaTime * actualCameraMoveSpeed);
-                //        //transform.RotateAround(rotationTarget.transform.position, -rotationTarget.transform.up, Time.deltaTime * actualCameraMoveSpeed);
-                //    }
-                //}
             }else if (bRotateY)
             {
                 if (difference.y > 0)
@@ -129,10 +108,39 @@ public class CameraControl : MonoBehaviour
                     transform.RotateAround(rotationTarget.transform.position, transform.up, Time.deltaTime * actualCameraMoveSpeed);
                 }
             }
+        }
+        else
+        {
+            float scroll = Input.GetAxis("Mouse ScrollWheel");
+            if (scroll > 0f)
+            {
+                // scroll up
+                ZoomIn();
+            }
+            else if (scroll < 0f)
+            {
+                // scroll down
+                ZoomOut();
+            }
+            Debug.Log(currentZoom);
+        }
+    }
 
+    public void ZoomIn()
+    {
+        if (currentZoom < minZoom)
+        {
+            transform.position = new Vector3(transform.position.x, transform.position.y, transform.position.z) + transform.forward * Time.deltaTime * zoomSpeed;
+            currentZoom += Time.deltaTime * zoomSpeed;
+        }
+    }
 
-
-
+    public void ZoomOut()
+    {
+        if (currentZoom > maxZoom)
+        {
+            transform.position = new Vector3(transform.position.x, transform.position.y, transform.position.z) - transform.forward * Time.deltaTime * zoomSpeed;
+            currentZoom -= Time.deltaTime * zoomSpeed;
         }
     }
 
@@ -152,5 +160,20 @@ public class CameraControl : MonoBehaviour
 
         startMousePos = Input.mousePosition;
         currentMousePos = Input.mousePosition;
+    }
+
+    public float GetMinZoom()
+    {
+        return minZoom;
+    }
+
+    public float GetMaxZoom()
+    {
+        return maxZoom;
+    }
+
+    public float GetCurrentZoom()
+    {
+        return currentZoom;
     }
 }

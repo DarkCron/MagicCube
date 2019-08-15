@@ -12,7 +12,7 @@ public class CubeControl : MonoBehaviour
     // Start is called before the first frame update
     void Start()
     {
-        manager = new MagicCubeManager(tileRef, 3, new Vector3(0, 2, 0));
+        manager = new MagicCubeManager(tileRef, 8, new Vector3(0, 2, 0));
     }
 
     // Update is called once per frame
@@ -66,6 +66,8 @@ public class MagicCubeManager
 
     private List<CubeAction> actionList;
 
+    public enum MagicCubeSide{ PosX, NegX, PosY, NegY, PosZ, NegZ, None}
+
     public MagicCubeManager(GameObject cubeTileRef, int n, Vector3 pivot)
     {
         ownHolder = new GameObject("Magic Cube");
@@ -83,8 +85,22 @@ public class MagicCubeManager
 
         collectionHelper = new CubeCollectionHelper(0);
         GenerateCubeTiles();
-        Camera.main.transform.position = new Vector3(mainPivot.x,mainPivot.y,-5);
+        Camera.main.transform.position = new Vector3(mainPivot.x,mainPivot.y,Camera.main.GetComponent<CameraControl>().GetCurrentZoom());
         Camera.main.transform.rotation = new Quaternion();
+    }
+
+    internal Vector3 GetWorldPos()
+    {
+        RaycastHit hit;
+        Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
+        int layerMask = LayerMask.GetMask("CubeTileLayer");
+
+        if (Physics.Raycast(ray, out hit, Mathf.Infinity, layerMask))
+        {
+            return hit.point;
+        }
+
+        return Vector3.positiveInfinity;
     }
 
     public void StartActionRemoveTile(List<GameObject> tiles)
@@ -545,27 +561,133 @@ public class MagicCubeManager
 
     public void QuerySliceRotation(GameObject cubeTile, Collider startFace, MagicCubeBehaviour.SwipeDragDirection direction)
     {
-        if (startFace == colliderNegZ)
+        MagicCubeSide side = GetWhichSide(startFace);
+        switch (side)
         {
-            switch (direction)
-            {
-                case MagicCubeBehaviour.SwipeDragDirection.UP:
-                    testAction = new ActionRotateZYClockWise(ownHolder, this, new List<GameObject>(collectionHelper.GetColumnXTiles(cubeTile)), true);
-                    break;
-                case MagicCubeBehaviour.SwipeDragDirection.DOWN:
-                    testAction = new ActionRotateZYCounterClockWise(ownHolder, this, new List<GameObject>(collectionHelper.GetColumnXTiles(cubeTile)), true);
-                    break;
-                case MagicCubeBehaviour.SwipeDragDirection.LEFT:
-                    Debug.Log("LEFT");
-                    testAction = new ActionRotateZXClockWise(ownHolder, this, new List<GameObject>(collectionHelper.GetRowTiles(cubeTile)), true);
-                    break;
-                case MagicCubeBehaviour.SwipeDragDirection.RIGHT:
-                    Debug.Log("RIGHT");
-                    testAction = new ActionRotateZXCounterClockWise(ownHolder, this,new List<GameObject>(collectionHelper.GetRowTiles(cubeTile)), true);
-                    break;
-                default:
-                    break;
-            }
+            case MagicCubeSide.PosX:
+                switch (direction)
+                {
+                    case MagicCubeBehaviour.SwipeDragDirection.UP:
+                        testAction = new ActionRotateYXClockWise(ownHolder, this, new List<GameObject>(collectionHelper.GetColumnZTiles(cubeTile)), true);
+                        break;
+                    case MagicCubeBehaviour.SwipeDragDirection.DOWN:
+                        testAction = new ActionRotateYXCounterClockWise(ownHolder, this, new List<GameObject>(collectionHelper.GetColumnZTiles(cubeTile)), true);
+                        break;
+                    case MagicCubeBehaviour.SwipeDragDirection.LEFT:
+                        Debug.Log("LEFT");
+                        testAction = new ActionRotateZXClockWise(ownHolder, this, new List<GameObject>(collectionHelper.GetRowTiles(cubeTile)), true);
+                        break;
+                    case MagicCubeBehaviour.SwipeDragDirection.RIGHT:
+                        Debug.Log("RIGHT");
+                        testAction = new ActionRotateZXCounterClockWise(ownHolder, this, new List<GameObject>(collectionHelper.GetRowTiles(cubeTile)), true);
+                        break;
+                    default:
+                        break;
+                }
+                break;
+            case MagicCubeSide.NegX:
+                switch (direction)
+                {
+                    case MagicCubeBehaviour.SwipeDragDirection.UP:
+                        testAction = new ActionRotateYXClockWise(ownHolder, this, new List<GameObject>(collectionHelper.GetColumnZTiles(cubeTile)), true);
+                        break;
+                    case MagicCubeBehaviour.SwipeDragDirection.DOWN:
+                        testAction = new ActionRotateYXCounterClockWise(ownHolder, this, new List<GameObject>(collectionHelper.GetColumnZTiles(cubeTile)), true);
+                        break;
+                    case MagicCubeBehaviour.SwipeDragDirection.LEFT:
+                        Debug.Log("LEFT");
+                        testAction = new ActionRotateZXClockWise(ownHolder, this, new List<GameObject>(collectionHelper.GetRowTiles(cubeTile)), true);
+                        break;
+                    case MagicCubeBehaviour.SwipeDragDirection.RIGHT:
+                        Debug.Log("RIGHT");
+                        testAction = new ActionRotateZXCounterClockWise(ownHolder, this, new List<GameObject>(collectionHelper.GetRowTiles(cubeTile)), true);
+                        break;
+                    default:
+                        break;
+                }
+                break;
+            case MagicCubeSide.PosY:
+                switch (direction)
+                {
+                    case MagicCubeBehaviour.SwipeDragDirection.UP:
+                        testAction = new ActionRotateYXClockWise(ownHolder, this, new List<GameObject>(collectionHelper.GetColumnZTiles(cubeTile)), true);
+                        break;
+                    case MagicCubeBehaviour.SwipeDragDirection.DOWN:
+                        testAction = new ActionRotateYXCounterClockWise(ownHolder, this, new List<GameObject>(collectionHelper.GetColumnZTiles(cubeTile)), true);
+                        break;
+                    case MagicCubeBehaviour.SwipeDragDirection.LEFT:
+                        Debug.Log("LEFT");
+                        testAction = new ActionRotateZYClockWise(ownHolder, this, new List<GameObject>(collectionHelper.GetColumnXTiles(cubeTile)), true);
+                        break;
+                    case MagicCubeBehaviour.SwipeDragDirection.RIGHT:
+                        Debug.Log("RIGHT");
+                        testAction = new ActionRotateZYCounterClockWise(ownHolder, this, new List<GameObject>(collectionHelper.GetColumnXTiles(cubeTile)), true);
+                        break;
+                    default:
+                        break;
+                }
+                break;
+            case MagicCubeSide.NegY:
+                switch (direction)
+                {
+                    case MagicCubeBehaviour.SwipeDragDirection.UP:
+                        testAction = new ActionRotateYXClockWise(ownHolder, this, new List<GameObject>(collectionHelper.GetColumnZTiles(cubeTile)), true);
+                        break;
+                    case MagicCubeBehaviour.SwipeDragDirection.DOWN:
+                        testAction = new ActionRotateYXCounterClockWise(ownHolder, this, new List<GameObject>(collectionHelper.GetColumnZTiles(cubeTile)), true);
+                        break;
+                    case MagicCubeBehaviour.SwipeDragDirection.LEFT:
+                        Debug.Log("LEFT");
+                        testAction = new ActionRotateZYClockWise(ownHolder, this, new List<GameObject>(collectionHelper.GetColumnXTiles(cubeTile)), true);
+                        break;
+                    case MagicCubeBehaviour.SwipeDragDirection.RIGHT:
+                        Debug.Log("RIGHT");
+                        testAction = new ActionRotateZYCounterClockWise(ownHolder, this, new List<GameObject>(collectionHelper.GetColumnXTiles(cubeTile)), true);
+                        break;
+                    default:
+                        break;
+                }
+                break;
+            case MagicCubeSide.PosZ:
+                switch (direction)
+                {
+                    case MagicCubeBehaviour.SwipeDragDirection.UP:
+                        testAction = new ActionRotateZYClockWise(ownHolder, this, new List<GameObject>(collectionHelper.GetColumnXTiles(cubeTile)), true);
+                        break;
+                    case MagicCubeBehaviour.SwipeDragDirection.DOWN:
+                        testAction = new ActionRotateZYCounterClockWise(ownHolder, this, new List<GameObject>(collectionHelper.GetColumnXTiles(cubeTile)), true);
+                        break;
+                    case MagicCubeBehaviour.SwipeDragDirection.LEFT:
+                        testAction = new ActionRotateZXClockWise(ownHolder, this, new List<GameObject>(collectionHelper.GetRowTiles(cubeTile)), true);
+                        break;
+                    case MagicCubeBehaviour.SwipeDragDirection.RIGHT:
+                        testAction = new ActionRotateZXCounterClockWise(ownHolder, this, new List<GameObject>(collectionHelper.GetRowTiles(cubeTile)), true);
+                        break;
+                    default:
+                        break;
+                }
+                break;
+            case MagicCubeSide.NegZ:
+                switch (direction)
+                {
+                    case MagicCubeBehaviour.SwipeDragDirection.UP:
+                        testAction = new ActionRotateZYClockWise(ownHolder, this, new List<GameObject>(collectionHelper.GetColumnXTiles(cubeTile)), true);
+                        break;
+                    case MagicCubeBehaviour.SwipeDragDirection.DOWN:
+                        testAction = new ActionRotateZYCounterClockWise(ownHolder, this, new List<GameObject>(collectionHelper.GetColumnXTiles(cubeTile)), true);
+                        break;
+                    case MagicCubeBehaviour.SwipeDragDirection.LEFT:
+                        testAction = new ActionRotateZXClockWise(ownHolder, this, new List<GameObject>(collectionHelper.GetRowTiles(cubeTile)), true);
+                        break;
+                    case MagicCubeBehaviour.SwipeDragDirection.RIGHT:
+                        testAction = new ActionRotateZXCounterClockWise(ownHolder, this, new List<GameObject>(collectionHelper.GetRowTiles(cubeTile)), true);
+                        break;
+                    default:
+                        break;
+                }
+                break;
+            default:
+                break;
         }
     }
 
@@ -579,6 +701,32 @@ public class MagicCubeManager
         {
             return false;
         }
+    }
+
+    public MagicCubeSide GetWhichSide(Collider collider)
+    {
+        if (collider == colliderPosX)
+        {
+            return MagicCubeSide.PosX;
+        }else if (collider == colliderNegX)
+        {
+            return MagicCubeSide.NegX;
+        }else if (collider == colliderPosY)
+        {
+            return MagicCubeSide.PosY;
+        }
+        else if (collider == colliderNegY)
+        {
+            return MagicCubeSide.NegY;
+        }else if (collider == colliderPosZ)
+        {
+            return MagicCubeSide.PosZ;
+        }
+        else if (collider == colliderNegZ)
+        {
+            return MagicCubeSide.NegZ;
+        }
+        throw new UnityException();
     }
 
 }
