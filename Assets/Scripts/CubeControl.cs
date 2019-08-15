@@ -38,6 +38,11 @@ public class CubeControl : MonoBehaviour
             }
         }
     }
+
+    private void OnMouseDrag()
+    {
+        
+    }
 }
 
 public class MagicCubeManager
@@ -78,6 +83,8 @@ public class MagicCubeManager
 
         collectionHelper = new CubeCollectionHelper(0);
         GenerateCubeTiles();
+        Camera.main.transform.position = new Vector3(mainPivot.x,mainPivot.y,-5);
+        Camera.main.transform.rotation = new Quaternion();
     }
 
     public void StartActionRemoveTile(List<GameObject> tiles)
@@ -137,6 +144,11 @@ public class MagicCubeManager
             data_Z.Report();
         }
 
+        public Vector3Int GetIndicesFromCube(GameObject tile)
+        {
+            return new Vector3Int(data_X.GenerateIndex(tile), data_Y.GenerateIndex(tile), data_Z.GenerateIndex(tile));
+        }
+
         struct SameCoordinateHelperX
         {
             Dictionary<int, List<GameObject>> data;
@@ -146,15 +158,20 @@ public class MagicCubeManager
                 data = new Dictionary<int, List<GameObject>>();
             }
 
+            public int GenerateIndex(GameObject cubeTile)
+            {
+                return Mathf.RoundToInt(cubeTile.transform.position.x);
+            }
+
             public void ProcessCubeTile(GameObject tile, Vector3 position)
             {
-                if (data.ContainsKey(Mathf.RoundToInt(position.x)))
+                if (data.ContainsKey(GenerateIndex(tile)))
                 {
-                    data[Mathf.RoundToInt(position.x)].Add(tile);
+                    data[GenerateIndex(tile)].Add(tile);
                 }
                 else
                 {
-                    data.Add(Mathf.RoundToInt(position.x), new List<GameObject> { tile });
+                    data.Add(GenerateIndex(tile), new List<GameObject> { tile });
                 }
             }
 
@@ -188,15 +205,20 @@ public class MagicCubeManager
                 data = new Dictionary<int, List<GameObject>>();
             }
 
+            public int GenerateIndex(GameObject cubeTile)
+            {
+                return Mathf.RoundToInt(cubeTile.transform.position.y);
+            }
+
             public void ProcessCubeTile(GameObject tile, Vector3 position)
             {
-                if (data.ContainsKey(Mathf.RoundToInt(position.y)))
+                if (data.ContainsKey(GenerateIndex(tile)))
                 {
-                    data[Mathf.RoundToInt(position.y)].Add(tile);
+                    data[GenerateIndex(tile)].Add(tile);
                 }
                 else
                 {
-                    data.Add(Mathf.RoundToInt(position.y), new List<GameObject> { tile });
+                    data.Add(GenerateIndex(tile), new List<GameObject> { tile });
                 }
             }
 
@@ -230,15 +252,20 @@ public class MagicCubeManager
                 data = new Dictionary<int, List<GameObject>>();
             }
 
+            public int GenerateIndex(GameObject cubeTile)
+            {
+                return Mathf.RoundToInt(cubeTile.transform.position.z);
+            }
+
             public void ProcessCubeTile(GameObject tile, Vector3 position)
             {
-                if (data.ContainsKey(Mathf.RoundToInt(position.z)))
+                if (data.ContainsKey(GenerateIndex(tile)))
                 {
-                    data[Mathf.RoundToInt(position.z)].Add(tile);
+                    data[GenerateIndex(tile)].Add(tile);
                 }
                 else
                 {
-                    data.Add(Mathf.RoundToInt(position.z), new List<GameObject> { tile });
+                    data.Add(GenerateIndex(tile), new List<GameObject> { tile });
                 }
             }
 
@@ -322,6 +349,21 @@ public class MagicCubeManager
             }
 
             throw new UnityException();
+        }
+
+        internal List<GameObject> GetColumnXTiles(GameObject cubeTile)
+        {
+            return data_X.GetData()[GetIndicesFromCube(cubeTile).x];
+        }
+
+        internal List<GameObject> GetRowTiles(GameObject cubeTile)
+        {
+            return data_Y.GetData()[GetIndicesFromCube(cubeTile).y];
+        }
+
+        internal List<GameObject> GetColumnZTiles(GameObject cubeTile)
+        {
+            return data_Z.GetData()[GetIndicesFromCube(cubeTile).z];
         }
     }
 
@@ -429,7 +471,7 @@ public class MagicCubeManager
             }
         }
 
-        if (Input.GetMouseButtonDown(0))
+        if (Input.GetMouseButtonDown(0) && false)
         {
 
 
@@ -472,19 +514,73 @@ public class MagicCubeManager
                     }
                 }
             }
+        }
+    }
 
-            RaycastHit hit2;
-            Ray ray2 = Camera.main.ScreenPointToRay(Input.mousePosition);
-            int layerMask2 = LayerMask.GetMask("CubeTileLayer");
+    public GameObject QueryFirstCubeTile()
+    {
+        RaycastHit hit;
+        Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
+        int layerMask = LayerMask.GetMask("CubeTileLayer");
 
-            if (Physics.Raycast(ray2, out hit2,Mathf.Infinity, layerMask2))
+        if (Physics.Raycast(ray, out hit, Mathf.Infinity, layerMask))
+        {
+            return hit.transform.gameObject;
+        }
+        return null;
+    }
+
+    internal Collider QueryMagicCubeFace()
+    {
+        RaycastHit hit;
+        Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
+        int layerMask = LayerMask.GetMask("MainGameLayer");
+
+        if (Physics.Raycast(ray, out hit, Mathf.Infinity, layerMask))
+        {
+            return hit.collider;
+        }
+        return null;
+    }
+
+    public void QuerySliceRotation(GameObject cubeTile, Collider startFace, MagicCubeBehaviour.SwipeDragDirection direction)
+    {
+        if (startFace == colliderNegZ)
+        {
+            switch (direction)
             {
-                //Debug.Log(hit2.transform.name);
-                //Debug.Log(LayerMask.GetMask("CubeTileLayer") + "    " + LayerMask.GetMask("MainGameLayer"));
-                //hit2.transform.gameObject.SetActive(false);
+                case MagicCubeBehaviour.SwipeDragDirection.UP:
+                    testAction = new ActionRotateZYClockWise(ownHolder, this, new List<GameObject>(collectionHelper.GetColumnXTiles(cubeTile)), true);
+                    break;
+                case MagicCubeBehaviour.SwipeDragDirection.DOWN:
+                    testAction = new ActionRotateZYCounterClockWise(ownHolder, this, new List<GameObject>(collectionHelper.GetColumnXTiles(cubeTile)), true);
+                    break;
+                case MagicCubeBehaviour.SwipeDragDirection.LEFT:
+                    Debug.Log("LEFT");
+                    testAction = new ActionRotateZXClockWise(ownHolder, this, new List<GameObject>(collectionHelper.GetRowTiles(cubeTile)), true);
+                    break;
+                case MagicCubeBehaviour.SwipeDragDirection.RIGHT:
+                    Debug.Log("RIGHT");
+                    testAction = new ActionRotateZXCounterClockWise(ownHolder, this,new List<GameObject>(collectionHelper.GetRowTiles(cubeTile)), true);
+                    break;
+                default:
+                    break;
             }
         }
     }
+
+    public bool IsPerformingAction()
+    {
+        if (testAction != null)
+        {
+            return !testAction.IsActionDone();
+        }
+        else
+        {
+            return false;
+        }
+    }
+
 }
 
 public abstract class CubeAction
