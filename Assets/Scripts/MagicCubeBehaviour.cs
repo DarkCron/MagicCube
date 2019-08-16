@@ -24,6 +24,10 @@ public class MagicCubeBehaviour : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
+        if (!MainGameLogic.IsMainGame())
+        {
+            return;
+        }
         if (Input.GetMouseButtonDown(0))
         {
             if (startCubeTile == null)
@@ -41,6 +45,11 @@ public class MagicCubeBehaviour : MonoBehaviour
         }
     }
 
+    public MagicCubeManager getMagicCubeManager()
+    {
+        return manager;
+    }
+
     public void Init(MagicCubeManager manager)
     {
         this.manager = manager;
@@ -48,6 +57,10 @@ public class MagicCubeBehaviour : MonoBehaviour
 
     private void OnMouseDrag()
     {
+        if (!MainGameLogic.IsMainGame())
+        {
+            return;
+        }
         if (!manager.IsPerformingAction())
         {
             if (startCubeTile == null || startFace == null)
@@ -78,6 +91,10 @@ public class MagicCubeBehaviour : MonoBehaviour
 
     private void OnMouseUp()
     {
+        if (!MainGameLogic.IsMainGame())
+        {
+            return;
+        }
         if (startCubeTile != null && startFace != null && !float.IsInfinity(currentDragPos.x))
         {
             //Debug.Log(mouseDragStartPos + "             " + currentDragPos);

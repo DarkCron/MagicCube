@@ -12,7 +12,7 @@ public class CameraControl : MonoBehaviour
     public float minZoom = -4.0f;
     public float maxZoom = -13.0f;
     public float zoomSpeed = 20.0f;
-    private float currentZoom = -5.0f;
+    private float currentZoom = -8.0f;
 
     public float cameraSpeed = 90.0f;
 
@@ -34,6 +34,11 @@ public class CameraControl : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
+        if (!MainGameLogic.IsMainGame())
+        {
+            return;
+        }
+
         if (bStartedRotation)
         {
             if (Input.GetMouseButtonUp(0))
