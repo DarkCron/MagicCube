@@ -5,7 +5,7 @@ using UnityEngine;
 
 public static class MainGameLogic 
 {
-    public enum CurrentActiveElement { MAIN_MENU, MAIN_GAME, GAME_MENU, CONFIRMATION_DIALOGUE, FINISH_CANVAS};
+    public enum CurrentActiveElement { MAIN_MENU, MAIN_GAME, GAME_MENU, FINISH_CANVAS};
     private static CurrentActiveElement currentActiveElement = MainGameLogic.CurrentActiveElement.MAIN_MENU;
 
     static public string SAVE_GAME_LOCATION = Application.persistentDataPath + "/magicCubeSaveData.save";
@@ -48,12 +48,7 @@ public static class MainGameLogic
 
     public static bool IsGameMenu()
     {
-        return currentActiveElement == CurrentActiveElement.MAIN_MENU;
-    }
-
-    public static bool IsConfirmation()
-    {
-        return currentActiveElement == CurrentActiveElement.CONFIRMATION_DIALOGUE;
+        return currentActiveElement == CurrentActiveElement.GAME_MENU;
     }
 
     public static bool IsFinish()

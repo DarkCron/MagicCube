@@ -211,7 +211,7 @@ public class UIManager : MonoBehaviour
         mainMenuCanvas.SetActive(true);
         mainGameUI.SetActive(false);
         MainGameLogic.SetCurrentActiveElement(MainGameLogic.CurrentActiveElement.MAIN_MENU);
-        //TODO: save progress
+        Camera.main.GetComponent<CubeControl>().GetMagicCubeManager().Save();
     }
 
     public void MainMenuNo()

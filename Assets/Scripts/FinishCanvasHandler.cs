@@ -51,7 +51,7 @@ public class FinishCanvasHandler : MonoBehaviour
             if (bStartedFinishAnimation)
             {
                 float degrees = Time.deltaTime * 40.0f;
-                Camera.main.transform.RotateAround(magicCube.GetComponent<MagicCubeBehaviour>().getMagicCubeManager().GetPivot(), magicCube.transform.up, degrees);
+                Camera.main.transform.RotateAround(magicCube.GetComponent<MagicCubeBehaviour>().getMagicCubeManager().GetPivot(), Camera.main.transform.up, degrees);
                 degreesTurned += degrees;
 
                 cameraZoomTimePassed += Time.deltaTime;

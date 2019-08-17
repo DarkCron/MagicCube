@@ -12,6 +12,7 @@ GameObject:
   - component: {fileID: 1836060194982424353}
   - component: {fileID: 5352095429257499608}
   - component: {fileID: 1256563905010864281}
+  - component: {fileID: 7592903467156103827}
   m_Layer: 11
   m_Name: MagicCubModel
   m_TagString: CubeTile
@@ -91,3 +92,15 @@ BoxCollider:
   serializedVersion: 2
   m_Size: {x: 1, y: 1, z: 1}
   m_Center: {x: 0, y: 0, z: 0}
+--- !u!114 &7592903467156103827
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5943239005422266116}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 0287758da6728e84facc31f3f1f38dc4, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 

@@ -10,6 +10,7 @@ public class MagicCubeSaveData
     public List<Vector3Serializable> positions = new List<Vector3Serializable>();
     public List<QuaternionSerializable> rotations = new List<QuaternionSerializable>();
     public List<ActionSaveData> undoActions = new List<ActionSaveData>();
+    public List<int> cubeTileIDs = new List<int>();
 
     public static MagicCubeSaveData CreateSaveData(MagicCubeManager manager)
     {
@@ -19,6 +20,7 @@ public class MagicCubeSaveData
         {
             savedata.positions.Add(Vector3Serializable.CreateVector3Serializable(cubeTile.transform.position));
             savedata.rotations.Add(QuaternionSerializable.CreateQuaternionSerializable(cubeTile.transform.rotation));
+            savedata.cubeTileIDs.Add(cubeTile.GetComponent<CubeTileInfo>().GetID());
         }
         foreach (var action in manager.GetUndoListReference())
         {
@@ -39,8 +41,7 @@ public class ActionSaveData
     public enum CollectionType { Row = 0, ColumnX, ColumnZ }
 
     public int action = (int)ActionType.ZXClock;
-    public int collectionType = (int)CollectionType.Row;
-    public int collectionIndex = 0;
+    public List<int> cubeCollection = new List<int>();
 
     public static ActionSaveData CreateSaveData(CubeAction cubeAction)
     {
@@ -48,37 +49,30 @@ public class ActionSaveData
         if (cubeAction.GetType() == typeof(ActionRotateZXClockWise))
         {
             savedata.action = (int)ActionType.ZXClock;
-            savedata.collectionType = (int)CollectionType.Row;
-            savedata.collectionIndex = cubeAction.QueryIndices().y;
         }else if (cubeAction.GetType() == typeof(ActionRotateZXCounterClockWise))
         {
             savedata.action = (int)ActionType.ZXCounterClock;
-            savedata.collectionType = (int)CollectionType.Row;
-            savedata.collectionIndex = cubeAction.QueryIndices().y;
         }
         else if (cubeAction.GetType() == typeof(ActionRotateZYClockWise))
         {
             savedata.action = (int)ActionType.ZYClock;
-            savedata.collectionType = (int)CollectionType.ColumnX;
-            savedata.collectionIndex = cubeAction.QueryIndices().x;
         }
         else if (cubeAction.GetType() == typeof(ActionRotateZYCounterClockWise))
         {
             savedata.action = (int)ActionType.ZYCounterClock;
-            savedata.collectionType = (int)CollectionType.ColumnX;
-            savedata.collectionIndex = cubeAction.QueryIndices().x;
         }
         else if (cubeAction.GetType() == typeof(ActionRotateYXClockWise))
         {
             savedata.action = (int)ActionType.YXClock;
-            savedata.collectionType = (int)CollectionType.ColumnZ;
-            savedata.collectionIndex = cubeAction.QueryIndices().z;
         }
         else if (cubeAction.GetType() == typeof(ActionRotateYXCounterClockWise))
         {
             savedata.action = (int)ActionType.YXCounterClock;
-            savedata.collectionType = (int)CollectionType.ColumnZ;
-            savedata.collectionIndex = cubeAction.QueryIndices().z;
+        }
+
+        foreach (var cubeTile in cubeAction.GetCubeTileListReference())
+        {
+            savedata.cubeCollection.Add(cubeTile.GetComponent<CubeTileInfo>().GetID());
         }
 
         return savedata;

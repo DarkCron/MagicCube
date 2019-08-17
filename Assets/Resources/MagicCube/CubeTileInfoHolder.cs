@@ -2,10 +2,8 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-public class CubeTileInfo : MonoBehaviour
+public class NewBehaviourScript : MonoBehaviour
 {
-    private int ID = -1;
-
     // Start is called before the first frame update
     void Start()
     {
@@ -16,15 +14,5 @@ public class CubeTileInfo : MonoBehaviour
     void Update()
     {
         
-    }
-
-    public void SetID(int ID)
-    {
-        this.ID = ID;
-    }
-
-    public int GetID()
-    {
-        return ID;
     }
 }

@@ -26,11 +26,22 @@ public class CubeControl : MonoBehaviour
         {
             manager.Update();
         }
+
+        if (Input.GetKeyDown(KeyCode.Home))
+        {
+            if (MainGameLogic.IsMainGame() || MainGameLogic.IsGameMenu())
+            {
+                manager.Save();
+            }
+        }
     }
 
-    private void OnMouseDrag()
+    private void OnApplicationQuit()
     {
-
+        if (MainGameLogic.IsMainGame() || MainGameLogic.IsGameMenu())
+        {
+            manager.Save();
+        }
     }
 
     public void CreateMagicCube(int size)
@@ -171,31 +182,37 @@ public class MagicCubeManager
             collectionHelper.ProcessCubeTile(temp, temp.transform.position);
             temp.transform.SetParent(ownHolder.transform);
             cubeTiles.Add(temp);
+            temp.GetComponent<CubeTileInfo>().SetID(savedata.cubeTileIDs[i]);
         }
 
         actionList.Clear();
         for (int i = 0; i < savedata.undoActions.Count; i++)
         {
             CubeAction action = null;
+            List<GameObject> cubeTilesForAction = new List<GameObject>();
+            foreach (var cubeID in savedata.undoActions[i].cubeCollection)
+            {
+                cubeTilesForAction.Add(cubeTiles.Find(ct => ct.GetComponent<CubeTileInfo>().GetID() == cubeID));
+            }
             switch (savedata.undoActions[i].action)
             {
                 case (int)ActionSaveData.ActionType.ZXClock:
-                    action = new ActionRotateZXClockWise(ownHolder,this,new List<GameObject>( collectionHelper.GetRowTiles(savedata.undoActions[i].collectionIndex)),true);
+                    action = new ActionRotateZXClockWise(ownHolder,this, cubeTilesForAction, true);
                     break;
                 case (int)ActionSaveData.ActionType.ZXCounterClock:
-                    action = new ActionRotateZXCounterClockWise(ownHolder, this, new List<GameObject>(collectionHelper.GetRowTiles(savedata.undoActions[i].collectionIndex)), true);
+                    action = new ActionRotateZXCounterClockWise(ownHolder, this, cubeTilesForAction, true);
                     break;
                 case (int)ActionSaveData.ActionType.YXClock:
-                    action = new ActionRotateYXClockWise(ownHolder, this, new List<GameObject>(collectionHelper.GetColumnZTiles(savedata.undoActions[i].collectionIndex)), true);
+                    action = new ActionRotateYXClockWise(ownHolder, this, cubeTilesForAction, true);
                     break;
                 case (int)ActionSaveData.ActionType.YXCounterClock:
-                    action = new ActionRotateYXCounterClockWise(ownHolder, this, new List<GameObject>(collectionHelper.GetColumnZTiles(savedata.undoActions[i].collectionIndex)), true);
+                    action = new ActionRotateYXCounterClockWise(ownHolder, this, cubeTilesForAction, true);
                     break;
                 case (int)ActionSaveData.ActionType.ZYClock:
-                    action = new ActionRotateZYClockWise(ownHolder, this, new List<GameObject>(collectionHelper.GetColumnXTiles(savedata.undoActions[i].collectionIndex)), true);
+                    action = new ActionRotateZYClockWise(ownHolder, this, cubeTilesForAction, true);
                     break;
                 case (int)ActionSaveData.ActionType.ZYCounterClock:
-                    action = new ActionRotateZYCounterClockWise(ownHolder, this, new List<GameObject>(collectionHelper.GetColumnXTiles(savedata.undoActions[i].collectionIndex)), true);
+                    action = new ActionRotateZYCounterClockWise(ownHolder, this, cubeTilesForAction, true);
                     break;
             }
             if (action == null)
@@ -471,6 +488,7 @@ public class MagicCubeManager
                         collectionHelper.ProcessCubeTile(temp, temp.transform.position);
                         temp.transform.SetParent(ownHolder.transform);
                         cubeTiles.Add(temp);
+                        temp.GetComponent<CubeTileInfo>().SetID(cubeTiles.Count);
                     }
                 }
             }
@@ -932,6 +950,10 @@ public class MagicCubeManager
 
     public void Save()
     {
+        if (bGameIsFinished)
+        {
+            return;
+        }
         MagicCubeSaveData saveData = MagicCubeSaveData.CreateSaveData(this);
 
         System.Runtime.Serialization.Formatters.Binary.BinaryFormatter bf = new System.Runtime.Serialization.Formatters.Binary.BinaryFormatter();
@@ -1025,6 +1047,11 @@ public abstract class CubeAction
     {
         bActionIsDone = true;
         timePassed = timeToCompleteAction;
+    }
+
+    public List<GameObject> GetCubeTileListReference()
+    {
+        return cubeTileList;
     }
 }
 
