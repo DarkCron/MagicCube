@@ -87,6 +87,7 @@ public class MagicCubeManager
     private bool bProcessingRandomActions = false;
     private float randomActionsTimePassed = 0.0f;
     private float randomActionTimer = 3.0f;
+    private bool bIsLoading = false;
 
     public MagicCubeManager(GameObject cubeTileRef, int n, Vector3 pivot)
     {
@@ -149,6 +150,68 @@ public class MagicCubeManager
         }
 
         return Vector3.positiveInfinity;
+    }
+
+    internal void LoadGame(MagicCubeSaveData savedata)
+    {
+        bIsLoading = true;
+        foreach (var item in cubeTiles)
+        {
+            UnityEngine.Object.Destroy(item);
+        }
+
+        cubeTiles.Clear();
+        collectionHelper = new CubeCollectionHelper(0);
+
+        for (int i = 0; i < savedata.positions.Count; i++)
+        {
+            var temp = GameObject.Instantiate(cubeTileRef,
+                  savedata.positions[i].ToVector3()
+                , savedata.rotations[i].ToQuaternion());
+            collectionHelper.ProcessCubeTile(temp, temp.transform.position);
+            temp.transform.SetParent(ownHolder.transform);
+            cubeTiles.Add(temp);
+        }
+
+        actionList.Clear();
+        for (int i = 0; i < savedata.undoActions.Count; i++)
+        {
+            CubeAction action = null;
+            switch (savedata.undoActions[i].action)
+            {
+                case (int)ActionSaveData.ActionType.ZXClock:
+                    action = new ActionRotateZXClockWise(ownHolder,this,new List<GameObject>( collectionHelper.GetRowTiles(savedata.undoActions[i].collectionIndex)),true);
+                    break;
+                case (int)ActionSaveData.ActionType.ZXCounterClock:
+                    action = new ActionRotateZXCounterClockWise(ownHolder, this, new List<GameObject>(collectionHelper.GetRowTiles(savedata.undoActions[i].collectionIndex)), true);
+                    break;
+                case (int)ActionSaveData.ActionType.YXClock:
+                    action = new ActionRotateYXClockWise(ownHolder, this, new List<GameObject>(collectionHelper.GetColumnZTiles(savedata.undoActions[i].collectionIndex)), true);
+                    break;
+                case (int)ActionSaveData.ActionType.YXCounterClock:
+                    action = new ActionRotateYXCounterClockWise(ownHolder, this, new List<GameObject>(collectionHelper.GetColumnZTiles(savedata.undoActions[i].collectionIndex)), true);
+                    break;
+                case (int)ActionSaveData.ActionType.ZYClock:
+                    action = new ActionRotateZYClockWise(ownHolder, this, new List<GameObject>(collectionHelper.GetColumnXTiles(savedata.undoActions[i].collectionIndex)), true);
+                    break;
+                case (int)ActionSaveData.ActionType.ZYCounterClock:
+                    action = new ActionRotateZYCounterClockWise(ownHolder, this, new List<GameObject>(collectionHelper.GetColumnXTiles(savedata.undoActions[i].collectionIndex)), true);
+                    break;
+            }
+            if (action == null)
+            {
+                actionList.Clear();
+                break;
+            }
+            action.CompleteActionNoAnimation();
+            actionList.Add(action);
+        }
+
+        timePassed = savedata.time;
+        seconds = savedata.time;
+        updateTime(seconds);
+        processUndoRedoPossible(actionList.Count > 0);
+        bIsLoading = false;
     }
 
     public void StartActionRemoveTile(List<GameObject> tiles)
@@ -355,64 +418,19 @@ public class MagicCubeManager
             }
         }
 
-        /// <summary>
-        /// Get all gameobjects from a ceretain row slice. Deep copy.
-        /// </summary>
-        /// <param name="index">indexing works from 0 - n-1, 0 being the lowest slice, n-1 the highest</param>
-        /// <returns></returns>
         public List<GameObject> GetRowTiles(int index)
         {
-            int count = 0;
-            foreach (var slice in data_Y.GetData())
-            {
-                if (count == index)
-                {
-                    return new List<GameObject>(slice.Value);
-                }
-                count++;
-            }
-
-            throw new UnityException();
+            return data_Y.GetData()[index];
         }
 
-        /// <summary>
-        /// Get all gameobjects from a certain column slice. Deep copy.
-        /// </summary>
-        /// <param name="index">indexing works from 0 - n-1, 0 being the lowest slice, n-1 the highest</param>
-        /// <returns></returns>
         public List<GameObject> GetColumnXTiles(int index)
         {
-            int count = 0;
-            foreach (var slice in data_X.GetData())
-            {
-                if (count == index)
-                {
-                    return new List<GameObject>(slice.Value);
-                }
-                count++;
-            }
-
-            throw new UnityException();
+            return data_X.GetData()[index];
         }
 
-        /// <summary>
-        /// Get all gameobjects from a certain column slice. Deep copy.
-        /// </summary>
-        /// <param name="index">indexing works from 0 - n-1, 0 being the lowest slice, n-1 the highest</param>
-        /// <returns></returns>
         public List<GameObject> GetColumnZTiles(int index)
         {
-            int count = 0;
-            foreach (var slice in data_Z.GetData())
-            {
-                if (count == index)
-                {
-                    return new List<GameObject>(slice.Value);
-                }
-                count++;
-            }
-
-            throw new UnityException();
+            return data_Z.GetData()[index];
         }
 
         internal List<GameObject> GetColumnXTiles(GameObject cubeTile)
@@ -546,6 +564,12 @@ public class MagicCubeManager
             else
             {
                 currentAction = null;
+
+                //After a move is fully completed check whether the game is finished or not 
+                if (CheckIfGameIsFinished())
+                {
+                    FinishGame();
+                }
             }
         }
 
@@ -569,23 +593,33 @@ public class MagicCubeManager
         {
             Save();
         }
-
-        if (Input.GetKeyDown(KeyCode.F))
-        {
-            FinishGame();
-        }
-        if (!bGameIsFinished)
-        {
-            if (CheckIfGameIsFinished())
-            {
-                FinishGame();
-            }
-        }
     }
 
     public bool CheckIfGameIsFinished()
     {
-        return false;
+        //Because of the way I programmed this game, a game should be finished if ALL cubes have the
+        //same rotation
+        float test = Mathf.Infinity;
+        foreach (var cubeTile in cubeTiles)
+        {
+            if (float.IsInfinity(test))
+            {
+                test = cubeTile.transform.rotation.eulerAngles.sqrMagnitude;
+                continue;
+            }
+
+            //NOTE: Vector3 sqrMagnitude is much faster than Magnitude
+            if (!FloatIsInRange(test, cubeTile.transform.rotation.eulerAngles.sqrMagnitude , 1.0f))
+            {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    private bool FloatIsInRange(float target, float value, float range)
+    {
+        return Mathf.Abs(value - target) <= range;
     }
 
     public void FinishGame()
@@ -891,6 +925,11 @@ public class MagicCubeManager
         return cubeTiles;
     }
 
+    internal int GetTimePassed()
+    {
+        return seconds;
+    }
+
     public void Save()
     {
         MagicCubeSaveData saveData = MagicCubeSaveData.CreateSaveData(this);
@@ -901,6 +940,11 @@ public class MagicCubeManager
         file.Close();
 
         Debug.Log("File written to: " + MainGameLogic.SAVE_GAME_LOCATION);
+    }
+
+    public bool IsLoading()
+    {
+        return bIsLoading;
     }
 }
 
@@ -933,7 +977,10 @@ public abstract class CubeAction
         }
         else
         {
-            StartAction();
+            if (!manager.IsLoading())
+            {
+                StartAction();
+            }
         }
     }
 
@@ -946,6 +993,7 @@ public abstract class CubeAction
     {
         return manager.QueryHelperCubeTileIndices(cubeTileList[0]);
     }
+
 
     public void CompleteAction()
     {
@@ -972,6 +1020,12 @@ public abstract class CubeAction
     }
 
     public abstract void Update();
+
+    public void CompleteActionNoAnimation()
+    {
+        bActionIsDone = true;
+        timePassed = timeToCompleteAction;
+    }
 }
 
 public class ActionRotateZXClockWise : CubeAction

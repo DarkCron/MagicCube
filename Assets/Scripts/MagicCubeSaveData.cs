@@ -25,6 +25,9 @@ public class MagicCubeSaveData
             savedata.undoActions.Add(ActionSaveData.CreateSaveData(action));
         }
 
+        savedata.magicCubeSize = manager.GetMagicCubeSize();
+        savedata.time = manager.GetTimePassed();
+
         return savedata;
     }
 }
@@ -99,6 +102,11 @@ public class Vector3Serializable
         };
         return save;
     }
+
+    public Vector3 ToVector3()
+    {
+        return new Vector3(x,y,z);
+    }
 }
 
 [System.Serializable]
@@ -119,5 +127,10 @@ public class QuaternionSerializable
             w = q.w
         };
         return save;
+    }
+
+    public Quaternion ToQuaternion()
+    {
+        return new Quaternion(x,y,z,w);
     }
 }

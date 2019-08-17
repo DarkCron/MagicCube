@@ -105,6 +105,11 @@ public class FinishCanvasHandler : MonoBehaviour
         StartFinishAnim();
         Camera.main.GetComponent<UIManager>().OpenFinishCanvas();
         GetComponent<Canvas>().enabled = false;
+
+        //After finishing a game we delete the save file, no need for it anymore.
+        //If we want to keep save games after finishing a game, I need to modify the save file
+        //slightly to store whether the game has finished or not, to ensure equal states.
+        MainGameLogic.DeleteSaveGame();
     }
 
     private void StartFinishAnim()

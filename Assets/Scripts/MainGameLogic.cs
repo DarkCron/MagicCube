@@ -10,6 +10,27 @@ public static class MainGameLogic
 
     static public string SAVE_GAME_LOCATION = Application.persistentDataPath + "/magicCubeSaveData.save";
 
+    public static MagicCubeSaveData LoadGameSave()
+    {
+        if (System.IO.File.Exists(SAVE_GAME_LOCATION))
+        {
+            System.Runtime.Serialization.Formatters.Binary.BinaryFormatter bf = new System.Runtime.Serialization.Formatters.Binary.BinaryFormatter();
+            System.IO.FileStream file = System.IO.File.Open(SAVE_GAME_LOCATION, System.IO.FileMode.Open);
+            MagicCubeSaveData savedata = (MagicCubeSaveData)bf.Deserialize(file);
+            file.Close();
+            return savedata;
+        }
+        throw new UnityException();
+    }
+
+    public static void DeleteSaveGame()
+    {
+        if (System.IO.File.Exists(SAVE_GAME_LOCATION))
+        {
+            System.IO.File.Delete(SAVE_GAME_LOCATION);
+        }
+    }
+
     public static void SetCurrentActiveElement(CurrentActiveElement element)
     {
         currentActiveElement = element;

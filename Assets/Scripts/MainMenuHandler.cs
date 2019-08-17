@@ -95,11 +95,27 @@ public class MainMenuHandler : MonoBehaviour
         MainGameLogic.LinkMagicCubeManagerAndFinish(Camera.main.GetComponent<CubeControl>().GetMagicCubeManager(),Camera.main.GetComponent<UIManager>().GetFinishCanvas());
 
         Camera.main.GetComponent<UIManager>().MainMenuToGame();
-        Camera.main.GetComponent<CubeControl>().GetMagicCubeManager().InitRandomMoves();
+        Camera.main.GetComponent<CubeControl>().GetMagicCubeManager().InitRandomMoves(0.7f);
     }
 
     public void LoadGame()
     {
+        try
+        {
+            MagicCubeSaveData savedata = MainGameLogic.LoadGameSave();
+
+            Camera.main.GetComponent<CubeControl>().CreateMagicCube(savedata.magicCubeSize);
+            MainGameLogic.SetCurrentActiveElement(MainGameLogic.CurrentActiveElement.MAIN_GAME);
+            MainGameLogic.LinkMagicCubeManagerAndUI(Camera.main.GetComponent<CubeControl>().GetMagicCubeManager(), Camera.main.GetComponent<UIManager>().GetMainGameUI());
+            MainGameLogic.LinkMagicCubeManagerAndFinish(Camera.main.GetComponent<CubeControl>().GetMagicCubeManager(), Camera.main.GetComponent<UIManager>().GetFinishCanvas());
+            Camera.main.GetComponent<CubeControl>().GetMagicCubeManager().LoadGame(savedata);
+
+            Camera.main.GetComponent<UIManager>().MainMenuToGame();
+        }
+        catch (Exception e)
+        {
+            StartGame();
+        }
 
     }
 }
