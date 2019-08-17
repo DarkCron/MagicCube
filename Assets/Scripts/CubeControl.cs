@@ -80,6 +80,10 @@ public class MagicCubeManager
     public delegate void ProcessUndoRedoPossible(bool bCanUndo);
     ProcessUndoRedoPossible processUndoRedoPossible;
 
+    public delegate void ProcessFinishGameSetTime(int time);
+    ProcessFinishGameSetTime processFinishGameSetTime;
+    private bool bGameIsFinished = false;
+
     private bool bProcessingRandomActions = false;
     private float randomActionsTimePassed = 0.0f;
     private float randomActionTimer = 3.0f;
@@ -122,6 +126,10 @@ public class MagicCubeManager
     public void LinkProcessOpenMenu(MainGameUI mainGameUI)
     {
         mainGameUI.SetMenuAction(Camera.main.GetComponent<UIManager>().OpenGameMenu);
+    }
+    public void LinkProcessFinishGame(FinishCanvasHandler finishCanvasHandler)
+    {
+        processFinishGameSetTime = finishCanvasHandler.StartFinish;
     }
 
     public bool IsCurrentActionDone()
@@ -541,17 +549,51 @@ public class MagicCubeManager
             }
         }
 
-        timePassed += Time.deltaTime;
-        if ((int)timePassed > seconds)
+        if (!bGameIsFinished)
         {
-            seconds = (int)timePassed;
-            updateTime(seconds);
+            timePassed += Time.deltaTime;
+            if ((int)timePassed > seconds)
+            {
+                seconds = (int)timePassed;
+                updateTime(seconds);
+            }
         }
+
 
         if (Input.GetMouseButtonDown(1))
         {
             Camera.main.GetComponent<UIManager>().OpenGameMenu();
         }
+
+        if (Input.GetKeyDown(KeyCode.B))
+        {
+            Save();
+        }
+
+        if (Input.GetKeyDown(KeyCode.F))
+        {
+            FinishGame();
+        }
+        if (!bGameIsFinished)
+        {
+            if (CheckIfGameIsFinished())
+            {
+                FinishGame();
+            }
+        }
+    }
+
+    public bool CheckIfGameIsFinished()
+    {
+        return false;
+    }
+
+    public void FinishGame()
+    {
+        processFinishGameSetTime((int)timePassed);
+        actionList.Clear();
+        processUndoRedoPossible(false);
+        bGameIsFinished = true;
     }
 
     public GameObject QueryFirstCubeTile()
@@ -833,6 +875,33 @@ public class MagicCubeManager
         action.SetTimeToComplete(0.3f);
         return action;
     }
+
+    public Vector3Int QueryHelperCubeTileIndices(GameObject cubeTile)
+    {
+        return collectionHelper.GetIndicesFromCube(cubeTile);
+    }
+
+    public List<CubeAction> GetUndoListReference()
+    {
+        return actionList;
+    }
+
+    public List<GameObject> GetCubeTileListReference()
+    {
+        return cubeTiles;
+    }
+
+    public void Save()
+    {
+        MagicCubeSaveData saveData = MagicCubeSaveData.CreateSaveData(this);
+
+        System.Runtime.Serialization.Formatters.Binary.BinaryFormatter bf = new System.Runtime.Serialization.Formatters.Binary.BinaryFormatter();
+        System.IO.FileStream file = System.IO.File.Create(MainGameLogic.SAVE_GAME_LOCATION);
+        bf.Serialize(file, saveData);
+        file.Close();
+
+        Debug.Log("File written to: " + MainGameLogic.SAVE_GAME_LOCATION);
+    }
 }
 
 public abstract class CubeAction
@@ -871,6 +940,11 @@ public abstract class CubeAction
     public void SetTimeToComplete(float newTime)
     {
         timeToCompleteAction = newTime;
+    }
+
+    public Vector3Int QueryIndices()
+    {
+        return manager.QueryHelperCubeTileIndices(cubeTileList[0]);
     }
 
     public void CompleteAction()

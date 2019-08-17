@@ -11,7 +11,7 @@ public class CameraControl : MonoBehaviour
 
     public float minZoom = -4.0f;
     public float maxZoom = -13.0f;
-    public float zoomSpeed = 20.0f;
+    public float zoomSpeed = 10.0f;
     private float currentZoom = -8.0f;
 
     public float cameraSpeed = 90.0f;
@@ -145,6 +145,15 @@ public class CameraControl : MonoBehaviour
         {
             transform.position = new Vector3(transform.position.x, transform.position.y, transform.position.z) - transform.forward * Time.deltaTime * zoomSpeed;
             currentZoom -= Time.deltaTime * zoomSpeed;
+        }
+    }
+
+    public void ZoomOut(float distance)
+    {
+        if (currentZoom > maxZoom)
+        {
+            transform.position = new Vector3(transform.position.x, transform.position.y, transform.position.z) - transform.forward * distance;
+            currentZoom -= distance;
         }
     }
 

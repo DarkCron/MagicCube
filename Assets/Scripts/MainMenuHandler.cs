@@ -1,11 +1,14 @@
-﻿using System.Collections;
+﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 
 public class MainMenuHandler : MonoBehaviour
 {
+    public Color availableColor;
     public Color notAvailableColor;
+    public Button continueButton;
     public Text continueText;
     public Text sliderText;
     public Slider cubeSizeSlider;
@@ -19,11 +22,37 @@ public class MainMenuHandler : MonoBehaviour
     // Start is called before the first frame update
     void Start()
     {
+        bContinueGameIsAvailable = CheckForLoadGameAvailable();
         if (!bContinueGameIsAvailable)
         {
             continueText.color = notAvailableColor;
         }
+        else
+        {
+            continueText.color = availableColor;
+        }
+        continueButton.interactable = bContinueGameIsAvailable;
         ChangeValue(cubeSizeSlider.value);
+    }
+
+    public void Reset()
+    {
+        bContinueGameIsAvailable = CheckForLoadGameAvailable();
+        if (!bContinueGameIsAvailable)
+        {
+            continueText.color = notAvailableColor;
+        }
+        else
+        {
+            continueText.color = availableColor;
+        }
+        continueButton.interactable = bContinueGameIsAvailable;
+        ChangeValue(cubeSizeSlider.value);
+    }
+
+    private bool CheckForLoadGameAvailable()
+    {
+        return System.IO.File.Exists(MainGameLogic.SAVE_GAME_LOCATION);
     }
 
     // Update is called once per frame
@@ -63,8 +92,14 @@ public class MainMenuHandler : MonoBehaviour
         Camera.main.GetComponent<CubeControl>().CreateMagicCube(Mathf.RoundToInt(cubeSizeSlider.value));
         MainGameLogic.SetCurrentActiveElement(MainGameLogic.CurrentActiveElement.MAIN_GAME);
         MainGameLogic.LinkMagicCubeManagerAndUI(Camera.main.GetComponent<CubeControl>().GetMagicCubeManager(), Camera.main.GetComponent<UIManager>().GetMainGameUI());
+        MainGameLogic.LinkMagicCubeManagerAndFinish(Camera.main.GetComponent<CubeControl>().GetMagicCubeManager(),Camera.main.GetComponent<UIManager>().GetFinishCanvas());
 
         Camera.main.GetComponent<UIManager>().MainMenuToGame();
         Camera.main.GetComponent<CubeControl>().GetMagicCubeManager().InitRandomMoves();
+    }
+
+    public void LoadGame()
+    {
+
     }
 }

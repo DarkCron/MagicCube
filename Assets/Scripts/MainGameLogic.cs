@@ -1,11 +1,14 @@
-﻿using System.Collections;
+﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
 public static class MainGameLogic 
 {
-    public enum CurrentActiveElement { MAIN_MENU, MAIN_GAME, GAME_MENU, CONFIRMATION_DIALOGUE};
+    public enum CurrentActiveElement { MAIN_MENU, MAIN_GAME, GAME_MENU, CONFIRMATION_DIALOGUE, FINISH_CANVAS};
     private static CurrentActiveElement currentActiveElement = MainGameLogic.CurrentActiveElement.MAIN_MENU;
+
+    static public string SAVE_GAME_LOCATION = Application.persistentDataPath + "/magicCubeSaveData.save";
 
     public static void SetCurrentActiveElement(CurrentActiveElement element)
     {
@@ -32,11 +35,21 @@ public static class MainGameLogic
         return currentActiveElement == CurrentActiveElement.CONFIRMATION_DIALOGUE;
     }
 
+    public static bool IsFinish()
+    {
+        return currentActiveElement == CurrentActiveElement.FINISH_CANVAS;
+    }
+
     public static void LinkMagicCubeManagerAndUI(MagicCubeManager manager, MainGameUI mainGameUI)
     {
         manager.LinkGameTimer(mainGameUI);
         manager.LinkUndoRedo(mainGameUI);
         manager.LinkProcessUndoRedoPossible(mainGameUI);
         manager.LinkProcessOpenMenu(mainGameUI);
+    }
+
+    internal static void LinkMagicCubeManagerAndFinish(MagicCubeManager manager, FinishCanvasHandler finishCanvasHandler)
+    {
+        manager.LinkProcessFinishGame(finishCanvasHandler);
     }
 }

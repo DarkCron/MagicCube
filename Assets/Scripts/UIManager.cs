@@ -9,8 +9,7 @@ public class UIManager : MonoBehaviour
     public GameObject mainGameUI;
     public GameObject gameMenuCanvas;
     public GameObject mainMenuCanvas;
-
-    private GameObject currentTopCanvasLayer;
+    public GameObject finishCanvas;
 
     // Start is called before the first frame update
     void Start()
@@ -37,6 +36,19 @@ public class UIManager : MonoBehaviour
         return mainGameUI.GetComponent<MainGameUI>();
     }
 
+    public FinishCanvasHandler GetFinishCanvas()
+    {
+        if (finishCanvas == null)
+        {
+            throw new UnityException();
+        }
+        if (finishCanvas.GetComponent<FinishCanvasHandler>() == null)
+        {
+            throw new UnityException();
+        }
+        return finishCanvas.GetComponent<FinishCanvasHandler>();
+    }
+
     public void MainMenuToGame()
     {
         mainMenuCanvas.SetActive(false);
@@ -54,6 +66,89 @@ public class UIManager : MonoBehaviour
         }
     }
 
+    internal void OpenFinishCanvas()
+    {
+        if (Camera.main.GetComponent<CubeControl>().GetMagicCubeManager().IsCurrentActionDone())
+        {
+            finishCanvas.GetComponent<FinishCanvasHandler>().Init(CloseFinishCanvas,FinishRestart,FinishMainMenu);
+            finishCanvas.SetActive(true);
+            MainGameLogic.SetCurrentActiveElement(MainGameLogic.CurrentActiveElement.FINISH_CANVAS);
+        }
+    }
+
+    #region FINISH CANVAS functions
+    /// <summary>
+    /// Finish Canvas functionalities
+    /// </summary>
+    public void CloseFinishCanvas()
+    {
+        finishCanvas.SetActive(false);
+        MainGameLogic.SetCurrentActiveElement(MainGameLogic.CurrentActiveElement.MAIN_GAME);
+    }
+
+    public void FinishMainMenu()
+    {
+        confirmationCanvas.GetComponent<ConfirmationHandler>().SetMessage("Main Menu?");
+        confirmationCanvas.GetComponent<ConfirmationHandler>().InitConfirmationCanvas(FinishMainMenuYes, FinishMainMenuNo, FinishMainMenuClose);
+        confirmationCanvas.SetActive(true);
+    }
+
+    public void FinishRestart()
+    {
+        confirmationCanvas.GetComponent<ConfirmationHandler>().SetMessage("Restart Game?");
+        confirmationCanvas.GetComponent<ConfirmationHandler>().InitConfirmationCanvas(FinishRestartYes, FinishRestartNo, FinishRestartClose);
+        confirmationCanvas.SetActive(true);
+    }
+
+    /// <summary>
+    /// Finish menu RESTART functionalities
+    /// </summary>
+    /// YES BUTTON
+    public void FinishRestartYes()
+    {
+        Camera.main.GetComponent<MainMenuHandler>().StartGame();
+        finishCanvas.SetActive(false);
+        confirmationCanvas.SetActive(false);
+        MainGameLogic.SetCurrentActiveElement(MainGameLogic.CurrentActiveElement.MAIN_GAME);
+    }
+
+    public void FinishRestartNo()
+    {
+        confirmationCanvas.SetActive(false);
+    }
+
+    public void FinishRestartClose()
+    {
+        confirmationCanvas.SetActive(false);
+    }
+
+    /// <summary>
+    /// Finish MAIN MENU functionalities
+    /// </summary>
+    /// YES BUTTON
+    public void FinishMainMenuYes()
+    {
+        finishCanvas.SetActive(false);
+        confirmationCanvas.SetActive(false);
+        gameMenuCanvas.SetActive(false);
+        Camera.main.GetComponent<MainMenuHandler>().Reset();
+        mainMenuCanvas.SetActive(true);
+        mainGameUI.SetActive(false);
+        MainGameLogic.SetCurrentActiveElement(MainGameLogic.CurrentActiveElement.MAIN_MENU);
+    }
+
+    public void FinishMainMenuNo()
+    {
+        confirmationCanvas.SetActive(false);
+    }
+
+    public void FinishMainMenuClose()
+    {
+        confirmationCanvas.SetActive(false);
+    }
+    #endregion
+
+    #region Game Menu Stuff
     /// <summary>
     /// Game menu functionalities
     /// </summary>
@@ -112,6 +207,7 @@ public class UIManager : MonoBehaviour
     {
         confirmationCanvas.SetActive(false);
         gameMenuCanvas.SetActive(false);
+        Camera.main.GetComponent<MainMenuHandler>().Reset();
         mainMenuCanvas.SetActive(true);
         mainGameUI.SetActive(false);
         MainGameLogic.SetCurrentActiveElement(MainGameLogic.CurrentActiveElement.MAIN_MENU);
@@ -127,4 +223,5 @@ public class UIManager : MonoBehaviour
     {
         confirmationCanvas.SetActive(false);
     }
+    #endregion
 }
