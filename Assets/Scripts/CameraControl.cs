@@ -39,6 +39,29 @@ public class CameraControl : MonoBehaviour
             return;
         }
 
+        if (Input.touchCount == 2)
+        {
+            Touch touchZero = Input.GetTouch(0);
+            Touch touchOne = Input.GetTouch(1);
+
+            Vector2 touchZeroPrevPos = touchZero.position - touchZero.deltaPosition;
+            Vector2 touchOnePrevPos = touchOne.position - touchOne.deltaPosition;
+
+            float prevTouchDeltaMag = (touchZeroPrevPos - touchOnePrevPos).magnitude;
+            float touchDeltaMag = (touchZero.position - touchOne.position).magnitude;
+
+            float deltaMagnitudeDiff = prevTouchDeltaMag - touchDeltaMag;
+
+            if (deltaMagnitudeDiff < 0)
+            {
+                ZoomIn();
+            }
+            else if (deltaMagnitudeDiff > 0)
+            {
+                ZoomOut();
+            }
+        }
+
         if (bStartedRotation)
         {
             if (Input.GetMouseButtonUp(0))
@@ -48,6 +71,10 @@ public class CameraControl : MonoBehaviour
         }
         if (bStartedRotation)
         {
+            if (Input.touchCount == 2)
+            {
+                Reset();
+            }
 
             Vector3 difference = startMousePos - Input.mousePosition;
             difference = new Vector3(-difference.y, difference.x, 0);
@@ -57,12 +84,12 @@ public class CameraControl : MonoBehaviour
             {
                 distanceMoved = easeInDistance;
             }
-            else if(distanceMoved < - easeInDistance)
+            else if (distanceMoved < -easeInDistance)
             {
                 distanceMoved = -easeInDistance;
             }
             //Debug.Log(distanceMoved);
-            
+
             currentMousePos = Input.mousePosition;
 
             float delta = 0.0f;
@@ -102,7 +129,8 @@ public class CameraControl : MonoBehaviour
                 {
                     transform.RotateAround(rotationTarget.transform.position, transform.right, Time.deltaTime * actualCameraMoveSpeed);
                 }
-            }else if (bRotateY)
+            }
+            else if (bRotateY)
             {
                 if (difference.y > 0)
                 {

@@ -600,9 +600,9 @@ public class MagicCubeManager
                 updateTime(seconds);
             }
         }
+        bool bIsPinching = Input.touchCount >= 2;
 
-
-        if (Input.GetMouseButtonDown(1))
+        if (Input.GetMouseButtonDown(1) && !bIsPinching)
         {
             Camera.main.GetComponent<UIManager>().OpenGameMenu();
         }

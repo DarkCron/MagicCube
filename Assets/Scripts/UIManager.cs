@@ -207,11 +207,12 @@ public class UIManager : MonoBehaviour
     {
         confirmationCanvas.SetActive(false);
         gameMenuCanvas.SetActive(false);
+        Camera.main.GetComponent<CubeControl>().GetMagicCubeManager().Save();
         Camera.main.GetComponent<MainMenuHandler>().Reset();
         mainMenuCanvas.SetActive(true);
         mainGameUI.SetActive(false);
         MainGameLogic.SetCurrentActiveElement(MainGameLogic.CurrentActiveElement.MAIN_MENU);
-        Camera.main.GetComponent<CubeControl>().GetMagicCubeManager().Save();
+        
     }
 
     public void MainMenuNo()
