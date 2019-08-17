@@ -100,6 +100,16 @@ public class UIManager : MonoBehaviour
         confirmationCanvas.SetActive(true);
     }
 
+    internal void DisableMenuButton()
+    {
+        mainGameUI.GetComponent<MainGameUI>().DisableMenuButton();
+    }
+
+    internal void EnableMenuButton()
+    {
+        mainGameUI.GetComponent<MainGameUI>().EnableMenuButton();
+    }
+
     /// <summary>
     /// Finish menu RESTART functionalities
     /// </summary>

@@ -23,6 +23,15 @@ public static class MainGameLogic
         throw new UnityException();
     }
 
+    internal static void StartGame()
+    {
+        Camera.main.GetComponent<UIManager>().confirmationCanvas.SetActive(false);
+        Camera.main.GetComponent<UIManager>().finishCanvas.SetActive(false);
+        Camera.main.GetComponent<UIManager>().mainMenuCanvas.SetActive(true);
+        Camera.main.GetComponent<UIManager>().gameMenuCanvas.SetActive(false);
+        Camera.main.GetComponent<UIManager>().mainGameUI.SetActive(false);
+    }
+
     public static void DeleteSaveGame()
     {
         if (System.IO.File.Exists(SAVE_GAME_LOCATION))

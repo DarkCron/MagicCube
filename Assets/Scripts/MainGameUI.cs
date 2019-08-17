@@ -9,6 +9,7 @@ public class MainGameUI : MonoBehaviour
     public Color actionAvailableColor;
     public Color actionUnavailableColor;
     public Text timerText;
+    public Button menuButton;
 
     //public GameObject redoAction;
     public GameObject undoAction;
@@ -35,7 +36,6 @@ public class MainGameUI : MonoBehaviour
     // Start is called before the first frame update
     void Start()
     {
-        
     }
 
     // Update is called once per frame
@@ -122,6 +122,16 @@ public class MainGameUI : MonoBehaviour
         {
             undoAction.GetComponent<Button>().image.color = actionUnavailableColor;
         }
+    }
+
+    internal void EnableMenuButton()
+    {
+        menuButton.interactable = true;
+    }
+
+    internal void DisableMenuButton()
+    {
+        menuButton.interactable = false;
     }
 
     public void UndoActionExecute()

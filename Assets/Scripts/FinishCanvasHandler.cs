@@ -73,6 +73,7 @@ public class FinishCanvasHandler : MonoBehaviour
     {
         bStartedFinishAnimation = false;
         GetComponent<Canvas>().enabled = true;
+        Camera.main.GetComponent<UIManager>().EnableMenuButton();
     }
 
     public void StartFinish(int time)
@@ -105,6 +106,7 @@ public class FinishCanvasHandler : MonoBehaviour
         StartFinishAnim();
         Camera.main.GetComponent<UIManager>().OpenFinishCanvas();
         GetComponent<Canvas>().enabled = false;
+        Camera.main.GetComponent<UIManager>().DisableMenuButton();
 
         //After finishing a game we delete the save file, no need for it anymore.
         //If we want to keep save games after finishing a game, I need to modify the save file

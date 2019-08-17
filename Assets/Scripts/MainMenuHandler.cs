@@ -33,6 +33,8 @@ public class MainMenuHandler : MonoBehaviour
         }
         continueButton.interactable = bContinueGameIsAvailable;
         ChangeValue(cubeSizeSlider.value);
+
+        MainGameLogic.StartGame();
     }
 
     public void Reset()
@@ -95,7 +97,7 @@ public class MainMenuHandler : MonoBehaviour
         MainGameLogic.LinkMagicCubeManagerAndFinish(Camera.main.GetComponent<CubeControl>().GetMagicCubeManager(),Camera.main.GetComponent<UIManager>().GetFinishCanvas());
 
         Camera.main.GetComponent<UIManager>().MainMenuToGame();
-        Camera.main.GetComponent<CubeControl>().GetMagicCubeManager().InitRandomMoves(2.4f);
+        Camera.main.GetComponent<CubeControl>().GetMagicCubeManager().InitRandomMoves(2.7f);
     }
 
     public void LoadGame()
