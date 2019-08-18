@@ -40,7 +40,10 @@ public class CubeControl : MonoBehaviour
     {
         if (MainGameLogic.IsMainGame() || MainGameLogic.IsGameMenu())
         {
-            manager.Save();
+            if (manager!= null && !manager.IsPerformingAction())
+            {
+                manager.Save();
+            }
         }
     }
 
@@ -119,8 +122,8 @@ public class MagicCubeManager
         collectionHelper = new CubeCollectionHelper(0);
         GenerateCubeTiles();
 
-        Camera.main.transform.position = new Vector3(mainPivot.x, mainPivot.y, Camera.main.GetComponent<CameraControl>().GetCurrentZoom());
-        Camera.main.transform.rotation = new Quaternion();
+        MainGameLogic.GetMainCamera().transform.position = new Vector3(mainPivot.x, mainPivot.y, MainGameLogic.GetMainCamera().GetComponent<CameraControl>().GetCurrentZoom());
+        MainGameLogic.GetMainCamera().transform.rotation = new Quaternion();
     }
 
     public void LinkGameTimer(MainGameUI mainGameUI)
@@ -137,7 +140,7 @@ public class MagicCubeManager
     }
     public void LinkProcessOpenMenu(MainGameUI mainGameUI)
     {
-        mainGameUI.SetMenuAction(Camera.main.GetComponent<UIManager>().OpenGameMenu);
+        mainGameUI.SetMenuAction(MainGameLogic.GetMainCamera().GetComponent<UIManager>().OpenGameMenu);
     }
     public void LinkProcessFinishGame(FinishCanvasHandler finishCanvasHandler)
     {
@@ -152,7 +155,7 @@ public class MagicCubeManager
     internal Vector3 GetWorldPos()
     {
         RaycastHit hit;
-        Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
+        Ray ray = MainGameLogic.GetMainCamera().ScreenPointToRay(Input.mousePosition);
         int layerMask = LayerMask.GetMask("CubeTileLayer");
 
         if (Physics.Raycast(ray, out hit, Mathf.Infinity, layerMask))
@@ -604,12 +607,7 @@ public class MagicCubeManager
 
         if (Input.GetMouseButtonDown(1) && !bIsPinching)
         {
-            Camera.main.GetComponent<UIManager>().OpenGameMenu();
-        }
-
-        if (Input.GetKeyDown(KeyCode.B))
-        {
-            Save();
+            MainGameLogic.GetMainCamera().GetComponent<UIManager>().OpenGameMenu();
         }
     }
 
@@ -651,7 +649,7 @@ public class MagicCubeManager
     public GameObject QueryFirstCubeTile()
     {
         RaycastHit hit;
-        Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
+        Ray ray = MainGameLogic.GetMainCamera().ScreenPointToRay(Input.mousePosition);
         int layerMask = LayerMask.GetMask("CubeTileLayer");
 
         if (Physics.Raycast(ray, out hit, Mathf.Infinity, layerMask))
@@ -664,7 +662,7 @@ public class MagicCubeManager
     internal Collider QueryMagicCubeFace()
     {
         RaycastHit hit;
-        Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
+        Ray ray = MainGameLogic.GetMainCamera().ScreenPointToRay(Input.mousePosition);
         int layerMask = LayerMask.GetMask("MainGameLayer");
 
         if (Physics.Raycast(ray, out hit, Mathf.Infinity, layerMask))

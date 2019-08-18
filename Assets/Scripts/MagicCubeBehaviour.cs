@@ -35,9 +35,9 @@ public class MagicCubeBehaviour : MonoBehaviour
                 startCubeTile = manager.QueryFirstCubeTile();
                 if (startCubeTile == null)
                 {
-                    if (Camera.main.GetComponent<CameraControl>() != null)
+                    if (MainGameLogic.GetMainCamera().GetComponent<CameraControl>() != null)
                     {
-                        Camera.main.GetComponent<CameraControl>().InitRotation(transform.gameObject);
+                        MainGameLogic.GetMainCamera().GetComponent<CameraControl>().InitRotation(transform.gameObject);
                     }
                 }
                 startCubeTile = null;
